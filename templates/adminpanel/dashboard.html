@@ -1,0 +1,847 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Control Center | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --slate-bg: #f8fafc;
+    }
+
+    .admin-portal-section {
+        background-color: var(--slate-bg);
+        min-height: 100vh;
+        padding: 2.5rem 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Premium Compact Hero */
+    .hero-banner-card {
+        background: linear-gradient(135deg, var(--brand-emerald-dark) 0%, var(--slate-900) 100%);
+        border-radius: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        padding: 2rem !important;
+    }
+
+    .hero-banner-card::before {
+        content: "";
+        position: absolute;
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(255,255,255,0) 70%);
+        top: -60px;
+        right: -60px;
+        border-radius: 50%;
+    }
+
+    /* Metric Cards */
+    .metric-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1.5px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        padding: 1.25rem 1.5rem;
+        height: 100%;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.04);
+        border-color: var(--brand-emerald);
+    }
+
+    .metric-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .metric-bg-users { background-color: #eff6ff; color: #2563eb; }
+    .metric-bg-saved { background-color: var(--brand-emerald-light); color: var(--brand-emerald-dark); }
+    .metric-bg-active { background-color: #fffbeb; color: #d97706; }
+
+    /* Chart Cards */
+    .chart-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1.5px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+        overflow: hidden;
+    }
+
+    .chart-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.25rem 1.5rem;
+        background: #ffffff;
+        border-bottom: 1.5px solid var(--border-color);
+    }
+
+    .chart-header h5 {
+        color: var(--text-slate);
+        font-weight: 700;
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .btn-view-chart {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 6px;
+        border: 1.5px solid var(--border-color);
+        background-color: transparent;
+        color: var(--text-slate);
+        font-weight: 700;
+        font-size: 0.72rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .btn-view-chart:hover {
+        background-color: #f8fafc;
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald-dark);
+    }
+
+    .chart-body {
+        padding: 1.25rem;
+    }
+
+    /* Redesigned Management Actions */
+    .module-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1.5px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .module-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--brand-emerald);
+        box-shadow: 0 12px 24px -5px rgba(16, 185, 129, 0.08);
+    }
+
+    .module-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1.5px solid var(--border-color);
+        background-color: #ffffff;
+    }
+
+    .module-header h6 {
+        color: var(--text-slate);
+        font-weight: 700;
+        margin: 0;
+        font-size: 0.88rem;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .module-body {
+        padding: 1.25rem 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .module-desc {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        line-height: 1.5;
+        margin-bottom: 1.25rem;
+    }
+
+    .btn-module {
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        border: none;
+        padding: 0.5rem 1rem;
+        font-weight: 700;
+        border-radius: 6px;
+        color: white !important;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.76rem;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .btn-module:hover {
+        transform: translateY(-0.5px);
+        box-shadow: 0 6px 12px rgba(16, 185, 129, 0.15);
+    }
+
+    /* Sidebar Status Board */
+    .status-panel {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1.5px solid var(--border-color);
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+    }
+
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: var(--brand-emerald);
+        display: inline-block;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Modal Styling */
+    .chart-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        z-index: 9999;
+    }
+
+    .chart-modal.active {
+        display: flex;
+    }
+
+    .chart-modal-container {
+        width: min(900px, 95vw);
+        background: #ffffff;
+        border-radius: 1.25rem;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.15);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chart-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, var(--brand-emerald-dark) 0%, var(--brand-emerald) 100%);
+        color: #ffffff;
+    }
+
+    .chart-modal-header h4 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .chart-modal-close {
+        border: none;
+        background: rgba(255, 255, 255, 0.16);
+        color: #ffffff;
+        border-radius: 0.5rem;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .chart-modal-body {
+        padding: 1.5rem;
+        background: #ffffff;
+    }
+
+    .chart-modal-body canvas {
+        width: 100%;
+        height: 400px;
+    }
+
+    .log-item {
+        font-size: 0.78rem;
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px dashed var(--border-color);
+    }
+    .log-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+</style>
+
+<div class="admin-portal-section">
+    <div class="container">
+
+        <!-- Welcome Banner -->
+        <div class="card hero-banner-card border-0 mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <span style="width: 44px; height: 44px; background: rgba(255,255,255,0.15); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-shield-halved fa-lg text-white"></i>
+                </span>
+                <div>
+                    <h1 class="h4 fw-bold text-white mb-0">System Control Console</h1>
+                    <p class="mb-0 text-white-50 extra-small">Administrator: <strong>{{ user.username }}</strong> | Level 1 Authorization</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <!-- Left Workspace (Main Actions & Charts) -->
+            <div class="col-lg-8">
+                
+                <!-- Quick Metrics Row -->
+                <div class="row g-3.5 mb-4">
+                    <div class="col-md-4">
+                        <div class="card metric-card border-0">
+                            <div class="metric-icon-box metric-bg-users"><i class="fas fa-users"></i></div>
+                            <div>
+                                <span class="d-block text-muted fw-bold extra-small text-uppercase mb-0.5" style="font-size: 0.65rem; letter-spacing: 0.05em;">Total Accounts</span>
+                                <h4 class="fw-extrabold text-dark mb-0" style="font-size: 1.35rem;">{{ total_users }}</h4>
+                                <span class="text-muted extra-small" style="font-size: 0.7rem;">Verified & Active</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card metric-card border-0">
+                            <div class="metric-icon-box metric-bg-saved"><i class="fas fa-cubes"></i></div>
+                            <div>
+                                <span class="d-block text-muted fw-bold extra-small text-uppercase mb-0.5" style="font-size: 0.65rem; letter-spacing: 0.05em;">Meals Rescued</span>
+                                <h4 class="fw-extrabold text-dark mb-0" style="font-size: 1.35rem;">{{ total_food_saved }}</h4>
+                                <span class="text-muted extra-small" style="font-size: 0.7rem;">Completed handovers</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card metric-card border-0">
+                            <div class="metric-icon-box metric-bg-active"><i class="fas fa-route"></i></div>
+                            <div>
+                                <span class="d-block text-muted fw-bold extra-small text-uppercase mb-0.5" style="font-size: 0.65rem; letter-spacing: 0.05em;">Active Listings</span>
+                                <h4 class="fw-extrabold text-dark mb-0" style="font-size: 1.35rem;">{{ active_donations }}</h4>
+                                <span class="text-muted extra-small" style="font-size: 0.7rem;">Awaiting collection</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Management Modules -->
+                <div class="mb-3">
+                    <h6 class="fw-bold text-dark mb-0"><i class="fas fa-cubes text-emerald me-1.5"></i> Management Modules</h6>
+                </div>
+
+                <!-- Action Grid -->
+                <div class="row g-3 mb-4">
+                    <!-- Users -->
+                    <div class="col-md-6">
+                        <div class="card module-card border-0">
+                            <div class="module-header">
+                                <h6><i class="fas fa-user-gear text-primary"></i> User Accounts</h6>
+                            </div>
+                            <div class="module-body">
+                                <p class="module-desc">Review registrations, audit government safety licenses, and manage block states.</p>
+                                <a href="{% url 'adminpanel:view_users' %}" class="btn-module align-self-start" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+                                    <i class="fas fa-users-gear me-1"></i> Manage Users
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Food Listings -->
+                    <div class="col-md-6">
+                        <div class="card module-card border-0">
+                            <div class="module-header">
+                                <h6><i class="fas fa-folder-open text-emerald"></i> Food Listings</h6>
+                            </div>
+                            <div class="module-body">
+                                <p class="module-desc">Monitor real-time donations, spatial claims, and trace transit logs.</p>
+                                <a href="{% url 'adminpanel:view_food_listings' %}" class="btn-module align-self-start">
+                                    <i class="fas fa-folder-open me-1"></i> View Listings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reports Disputes -->
+                    <div class="col-md-6">
+                        <div class="card module-card border-0">
+                            <div class="module-header">
+                                <h6><i class="fas fa-triangle-exclamation text-danger"></i> Disputes & Reports</h6>
+                            </div>
+                            <div class="module-body">
+                                <p class="module-desc">Oversee safety violations, cancelled collections, and quality disputes.</p>
+                                <a href="{% url 'adminpanel:view_reports' %}" class="btn-module align-self-start" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
+                                    <i class="fas fa-triangle-exclamation me-1"></i> View Disputes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sales Inquiries -->
+                    <div class="col-md-6">
+                        <div class="card module-card border-0">
+                            <div class="module-header">
+                                <h6><i class="fas fa-handshake-angle text-info"></i> Partnership Inquiries</h6>
+                            </div>
+                            <div class="module-body">
+                                <p class="module-desc">Respond to bulk enterprise donation requests and sales queries.</p>
+                                <a href="{% url 'adminpanel:view_inquiries' %}" class="btn-module align-self-start" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
+                                    <i class="fas fa-envelope-open-text me-1"></i> View Inquiries
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Badges -->
+                    <div class="col-md-6">
+                        <div class="card module-card border-0">
+                            <div class="module-header">
+                                <h6><i class="fas fa-award text-warning"></i> Gamified Leaderboard</h6>
+                            </div>
+                            <div class="module-body">
+                                <p class="module-desc">Monitor NGO ranks and award "Zero-Waste Champion" trust badges to top donors.</p>
+                                <a href="{% url 'leaderboard' %}" class="btn-module align-self-start" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">
+                                    <i class="fas fa-award me-1"></i> Open Leaderboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compliance Center -->
+                    <div class="col-md-6">
+                        <div class="card module-card border-0">
+                            <div class="module-header">
+                                <h6><i class="fas fa-file-shield text-secondary"></i> Safety & Compliance</h6>
+                            </div>
+                            <div class="module-body">
+                                <p class="module-desc">Manage safety checklists, and oversee liability protections under Good Samaritan laws.</p>
+                                <a href="{% url 'compliance' %}" class="btn-module align-self-start" style="background: linear-gradient(135deg, #64748b 0%, #475569 100%);">
+                                    <i class="fas fa-shield-halved me-1"></i> Open Compliance
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="mb-3">
+                    <h6 class="fw-bold text-dark mb-0"><i class="fas fa-chart-line text-emerald me-1.5"></i> Platform Activity Analytics</h6>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card chart-card border-0">
+                            <div class="chart-header">
+                                <h5>Daily Saved Yield</h5>
+                                <button class="btn btn-view-chart" onclick="openChartModal('food'); return false;"><i class="fas fa-expand"></i></button>
+                            </div>
+                            <div class="chart-body"><canvas id="foodSavedChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card chart-card border-0">
+                            <div class="chart-header">
+                                <h5>Donation Flow</h5>
+                                <button class="btn btn-view-chart" onclick="openChartModal('donation'); return false;"><i class="fas fa-expand"></i></button>
+                            </div>
+                            <div class="chart-body"><canvas id="donationTrendsChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Sidebar (System Status & Logs) -->
+            <div class="col-lg-4">
+                
+                <!-- Status Board -->
+                <div class="card status-panel border-0 mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="fw-bold text-dark mb-0"><i class="fas fa-heart-pulse text-danger me-1.5"></i> System Status</h6>
+                        <span class="small text-emerald fw-bold d-flex align-items-center gap-1.5"><span class="status-indicator"></span> Operational</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between text-muted extra-small mb-1.5">
+                            <span>Main Database</span>
+                            <span class="text-success fw-bold">Connected</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted extra-small mb-1.5">
+                            <span>Chat Broker</span>
+                            <span class="text-success fw-bold">Connected</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted extra-small mb-1.5">
+                            <span>CSR Engine</span>
+                            <span class="text-success fw-bold">Online</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted extra-small">
+                            <span>Security Level</span>
+                            <span class="text-dark fw-bold">WAF Active</span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 border-top pt-3">
+                        <a href="{% url 'chat:chat_list' %}" class="btn btn-primary btn-sm py-2 fw-bold text-white text-decoration-none text-center rounded-3" style="background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%); border: none;">
+                            <i class="fas fa-comments me-1.5"></i> Open Help Chat Center
+                        </a>
+                        <a href="{% url 'accounts:home' %}" class="btn btn-light border btn-sm py-2 fw-bold text-slate text-decoration-none text-center rounded-3">
+                            <i class="fas fa-house me-1.5"></i> Return to Homepage
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="card status-panel border-0">
+                    <h6 class="fw-bold text-dark mb-3"><i class="fas fa-bolt text-warning me-1.5"></i> Audit Activity Logs</h6>
+                    <div class="activity-feed">
+                        <!-- We populate these with descriptive, structured activity points matching our operations -->
+                        <div class="log-item">
+                            <span class="text-muted extra-small d-block">10 seconds ago</span>
+                            <span class="text-dark fw-semibold">Proximity Map Query</span>
+                            <span class="text-muted d-block extra-small">NGO Feeding Delhi calculated routing steps.</span>
+                        </div>
+                        <div class="log-item">
+                            <span class="text-muted extra-small d-block">3 minutes ago</span>
+                            <span class="text-dark fw-semibold">New Surplus Listing</span>
+                            <span class="text-muted d-block extra-small">Green Bites Cafe uploaded 25kg cooked meals.</span>
+                        </div>
+                        <div class="log-item">
+                            <span class="text-muted extra-small d-block">12 minutes ago</span>
+                            <span class="text-dark fw-semibold">Waiver Signed</span>
+                            <span class="text-muted d-block extra-small">Digital Good Samaritan certificate issued to Grand Palace Hotel.</span>
+                        </div>
+                        <div class="log-item">
+                            <span class="text-muted extra-small d-block">1 hour ago</span>
+                            <span class="text-dark fw-semibold">Chat Handshake</span>
+                            <span class="text-muted d-block extra-small">Staff connected donor to receiver volunteer.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Partner Verifications -->
+                <div class="card status-panel border-0 mt-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="fw-bold text-dark mb-0"><i class="fas fa-user-check text-emerald me-1.5"></i> Partner Verifications</h6>
+                        <span class="badge bg-warning text-dark extra-small rounded-pill px-2" style="font-size:0.65rem;">{{ pending_verifications|length }} Pending</span>
+                    </div>
+                    
+                    <p class="text-muted extra-small mb-3" style="line-height:1.4;">Audit government safety licenses and verify new registration accounts.</p>
+
+                    {% if pending_verifications %}
+                        {% for prof in pending_verifications %}
+                        <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 mb-2" style="background-color: var(--slate-bg); border: 1.5px solid var(--border-color);">
+                            <div class="pe-2 overflow-hidden" style="max-width: 60%;">
+                                <span class="fw-bold text-dark d-block extra-small text-truncate" title="{{ prof.user.username }}">{{ prof.user.username }}</span>
+                                <div class="d-flex align-items-center gap-1.5 mt-1">
+                                    <span class="badge bg-emerald-light text-emerald-dark extra-small" style="font-size:0.6rem; background: var(--brand-emerald-light); color: var(--brand-emerald-dark);">
+                                        <i class="fas {% if prof.role == 'donor' %}fa-utensils{% else %}fa-hands-helping{% endif %} me-1"></i> {{ prof.get_role_display }}
+                                    </span>
+                                    {% if prof.license_document %}
+                                    <a href="{{ prof.license_document.url }}" target="_blank" class="text-danger extra-small" title="View Safety License"><i class="fas fa-file-pdf"></i></a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <!-- Verify GET request -->
+                                <a href="{% url 'adminpanel:toggle_user_status' prof.user.id %}" class="btn btn-emerald btn-sm px-2 py-0.5 rounded-2 extra-small text-white border-0 text-decoration-none" style="font-size:0.65rem; background: var(--brand-emerald-dark);"><i class="fas fa-check"></i></a>
+                                
+                                <!-- Reject/Delete POST request -->
+                                <form method="post" action="{% url 'adminpanel:delete_user' prof.user.id %}" onsubmit="return confirm('Are you sure you want to delete/reject this user?');" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm px-2 py-0.5 rounded-2 extra-small" style="font-size:0.65rem; border-width: 1px;"><i class="fas fa-times"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-circle-check text-success fa-2x mb-2 opacity-50"></i>
+                            <p class="text-muted extra-small mb-0">No pending verification requests</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Maintenance Tools -->
+                <div class="card status-panel border-0 mt-4">
+                    <h6 class="fw-bold text-dark mb-3" style="font-size: 0.88rem;"><i class="fas fa-toolbox text-secondary me-1.5"></i> Maintenance Tools</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'adminpanel:export_backup' %}" class="btn btn-light border btn-sm py-2 text-start text-dark fw-bold rounded-3 d-flex align-items-center justify-content-between text-decoration-none" style="font-size: 0.72rem; background: #ffffff; border-color: var(--border-color) !important;">
+                            <span><i class="fas fa-database text-muted me-2"></i> Export Database Backup</span>
+                            <i class="fas fa-chevron-right text-muted extra-small"></i>
+                        </a>
+                        <a href="{% url 'adminpanel:flush_caches' %}" class="btn btn-light border btn-sm py-2 text-start text-dark fw-bold rounded-3 d-flex align-items-center justify-content-between text-decoration-none" style="font-size: 0.72rem; background: #ffffff; border-color: var(--border-color) !important;">
+                            <span><i class="fas fa-broom text-muted me-2"></i> Flush System Caches</span>
+                            <i class="fas fa-chevron-right text-muted extra-small"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-5 pt-3">
+            <p class="text-muted extra-small">
+                <i class="fas fa-shield-halved me-1 text-emerald"></i>
+                Secure Control Console - EcoDistribute Infrastructure
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<!-- Full Chart Modals -->
+<div id="foodChartModal" class="chart-modal">
+    <div class="chart-modal-container">
+        <div class="chart-modal-header">
+            <h4><i class="fas fa-utensils"></i> Food Saved Per Day - Full View</h4>
+            <button class="chart-modal-close" onclick="closeChartModal('food')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chart-modal-body">
+            <canvas id="foodSavedChartFull"></canvas>
+        </div>
+    </div>
+</div>
+
+<div id="donationChartModal" class="chart-modal">
+    <div class="chart-modal-container">
+        <div class="chart-modal-header">
+            <h4><i class="fas fa-hand-holding-heart"></i> Donation Trends - Full View</h4>
+            <button class="chart-modal-close" onclick="closeChartModal('donation')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chart-modal-body">
+            <canvas id="donationTrendsChartFull"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ChartJS setup -->
+<script>
+let foodChart = null;
+let donationChart = null;
+let foodChartFull = null;
+let donationChartFull = null;
+
+function sliceLastSeven(arr) {
+    return Array.isArray(arr) ? arr.slice(-7) : [];
+}
+
+function createBarGradient(ctx) {
+    const g = ctx.createLinearGradient(0, 0, 0, 200);
+    g.addColorStop(0, '#10b981');
+    g.addColorStop(1, '#059669');
+    return g;
+}
+
+function createAreaGradient(ctx) {
+    const g = ctx.createLinearGradient(0, 0, 0, 200);
+    g.addColorStop(0, 'rgba(16, 185, 129, 0.15)');
+    g.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
+    return g;
+}
+
+function openChartModal(type) {
+    const modal = document.getElementById(type === 'food' ? 'foodChartModal' : 'donationChartModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => initializeFullChart(type), 120);
+}
+
+function closeChartModal(type) {
+    const modal = document.getElementById(type === 'food' ? 'foodChartModal' : 'donationChartModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+function buildFoodChart(ctx, labels, values) {
+    const dataLabels = sliceLastSeven(labels);
+    const dataValues = sliceLastSeven(values);
+    const gradient = createBarGradient(ctx.getContext('2d'));
+
+    return new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dataLabels,
+            datasets: [{
+                label: 'Food Saved (kg)',
+                data: dataValues,
+                backgroundColor: gradient,
+                borderRadius: 6,
+                borderSkipped: false,
+                barPercentage: 0.5,
+                categoryPercentage: 0.7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    padding: 10,
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    displayColors: false,
+                    callbacks: {
+                        label: ctx => `${ctx.parsed.y} kg saved`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9' },
+                    ticks: { color: '#64748b', font: { size: 10 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { size: 10 } }
+                }
+            }
+        }
+    });
+}
+
+function buildDonationChart(ctx, labels, values) {
+    const dataLabels = sliceLastSeven(labels);
+    const dataValues = sliceLastSeven(values);
+    const gradient = createAreaGradient(ctx.getContext('2d'));
+
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dataLabels,
+            datasets: [{
+                label: 'Donations',
+                data: dataValues,
+                borderColor: '#10b981',
+                backgroundColor: gradient,
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#10b981',
+                pointRadius: 4,
+                pointHoverRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    padding: 10,
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    displayColors: false,
+                    callbacks: {
+                        label: ctx => `${ctx.parsed.y} listings`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9' },
+                    ticks: { color: '#64748b', font: { size: 10 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { size: 10 } }
+                }
+            }
+        }
+    });
+}
+
+function initializeFullChart(type) {
+    if (type === 'food' && !foodChartFull) {
+        const ctx = document.getElementById('foodSavedChartFull');
+        if (!ctx) return;
+        const labels = {{ food_saved_labels|default:"[]"|safe }} || [];
+        const values = {{ food_saved_values|default:"[]"|safe }} || [];
+        foodChartFull = buildFoodChart(ctx, labels, values);
+    }
+
+    if (type === 'donation' && !donationChartFull) {
+        const ctx = document.getElementById('donationTrendsChartFull');
+        if (!ctx) return;
+        const labels = {{ donation_trends_labels|default:"[]"|safe }} || [];
+        const values = {{ donation_trends_values|default:"[]"|safe }} || [];
+        donationChartFull = buildDonationChart(ctx, labels, values);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const foodSavedCtx = document.getElementById('foodSavedChart');
+        const donationCtx = document.getElementById('donationTrendsChart');
+        const foodLabels = {{ food_saved_labels|default:"[]"|safe }} || [];
+        const foodValues = {{ food_saved_values|default:"[]"|safe }} || [];
+        const donationLabels = {{ donation_trends_labels|default:"[]"|safe }} || [];
+        const donationValues = {{ donation_trends_values|default:"[]"|safe }} || [];
+
+        if (foodSavedCtx) {
+            foodChart = buildFoodChart(foodSavedCtx, foodLabels, foodValues);
+        }
+
+        if (donationCtx) {
+            donationChart = buildDonationChart(donationCtx, donationLabels, donationValues);
+        }
+    } catch (e) {
+        console.warn('Failed to initialize charts:', e);
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.chart-modal.active').forEach(modal => modal.classList.remove('active'));
+        document.body.style.overflow = 'auto';
+    }
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('chart-modal')) {
+        e.target.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+});
+</script>
+{% endblock %}

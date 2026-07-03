@@ -1,0 +1,52 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Database
+*.sqlite3
+*.db
+db.sqlite3
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+**/migrations/__pycache__/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3-journal
+
+# Media files (optional)
+# media/
+
+# Static files (collected)
+staticfiles/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Auth files (sensitive credentials)
+auth file/
+
+# GitHub
+.github/
+
+# Docker volumes
+postgres_data/

@@ -1,0 +1,502 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Inquiries | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Sustainability Palette */
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --slate-bg: #f8fafc;
+    }
+
+    .admin-portal-section {
+        background-color: var(--slate-bg);
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Back Button */
+    .btn-back-dashboard {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        color: var(--text-slate);
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 0.55rem 1rem;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-back-dashboard:hover {
+        background-color: #f8fafc;
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald-dark);
+    }
+
+    /* Table Card */
+    .custom-table-card {
+        border-radius: 1rem;
+        border: 1px solid var(--border-color);
+        background: white;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .table-header {
+        background: #ffffff;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table-header h5 {
+        color: var(--text-slate);
+        font-weight: 700;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.05rem;
+    }
+
+    .inquiries-table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    .inquiries-table thead th {
+        background-color: #f8fafc;
+        border-bottom: 2px solid var(--border-color);
+        color: var(--text-muted);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.72rem;
+        padding: 1rem 1.5rem;
+    }
+
+    .inquiries-table tbody td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        font-size: 0.85rem;
+        color: var(--text-slate);
+    }
+
+    .inquiries-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    /* Avatar & Badges */
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-right: 0.75rem;
+        color: white;
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+    }
+
+    .organization-badge {
+        background-color: var(--brand-emerald-light);
+        color: var(--brand-emerald-dark);
+        font-weight: 700;
+        font-size: 0.7rem;
+        border-radius: 6px;
+        padding: 0.25rem 0.5rem;
+        display: inline-block;
+        text-transform: uppercase;
+    }
+
+    .donation-badge {
+        background-color: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 700;
+        font-size: 0.7rem;
+        border-radius: 6px;
+        padding: 0.25rem 0.5rem;
+        display: inline-block;
+        text-transform: uppercase;
+    }
+
+    .btn-view-message {
+        background-color: #f8fafc;
+        border: 1.5px solid var(--border-color);
+        color: var(--text-slate);
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .btn-view-message:hover {
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald-dark);
+        background-color: var(--brand-emerald-light);
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 1rem;
+        border: none;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--brand-emerald-dark) 0%, var(--brand-emerald) 100%);
+        color: white;
+        border-bottom: none;
+        padding: 1.25rem 1.75rem;
+    }
+
+    .modal-header .modal-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: white;
+    }
+
+    .modal-body {
+        padding: 1.75rem;
+        background: #ffffff;
+    }
+
+    .inquiry-detail {
+        background: #f8fafc;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid #f1f5f9;
+    }
+
+    .inquiry-detail h6 {
+        color: var(--text-slate);
+        font-weight: 750;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-bottom: 0.35rem;
+    }
+
+    .inquiry-detail p {
+        margin-bottom: 0;
+        color: #334155;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    /* Mobile Cards View */
+    .mobile-cards {
+        display: none;
+    }
+
+    .inquiry-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+        margin-bottom: 1rem;
+        padding: 1.25rem;
+        transition: transform 0.2s ease;
+    }
+
+    .inquiry-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.02);
+    }
+
+    .card-header-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .card-user-info h6 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--text-slate);
+    }
+
+    .card-user-info p {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .card-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid #f8fafc;
+        font-size: 0.8rem;
+    }
+
+    .card-label {
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .card-value {
+        color: var(--text-slate);
+        font-weight: 700;
+    }
+
+    .card-actions {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: rgba(16, 185, 129, 0.2);
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .custom-table-card {
+            display: none;
+        }
+        .mobile-cards {
+            display: block;
+        }
+    }
+</style>
+
+<section class="admin-portal-section">
+    <div class="container">
+        
+        <!-- Breadcrumb & Header -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb extra-small fw-bold text-uppercase mb-1" style="letter-spacing: 0.05em; font-size: 0.7rem;">
+                        <li class="breadcrumb-item"><span class="text-muted">Console</span></li>
+                        <li class="breadcrumb-item active text-emerald">Sales inquiries</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold text-dark mb-0">Contact Inquiries</h1>
+                <p class="text-muted small mb-0">Manage and review business partnership inquiries from bulk surplus donors.</p>
+            </div>
+            <div>
+                <a href="{% url 'adminpanel:dashboard' %}" class="btn btn-back-dashboard">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        {% if inquiries %}
+            <!-- Desktop Table View -->
+            <div class="card custom-table-card border-0 shadow-sm">
+                <div class="table-header">
+                    <h5>
+                        <i class="fas fa-envelope text-emerald"></i> Business Partnership Inquiries
+                    </h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="inquiries-table">
+                        <thead>
+                            <tr>
+                                <th>Contact Person</th>
+                                <th>Organization</th>
+                                <th>Org Type</th>
+                                <th>Estimated Size</th>
+                                <th>Location</th>
+                                <th>Date Submitted</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inquiry in inquiries %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar">
+                                            {{ inquiry.full_name|slice:":1"|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ inquiry.full_name }}</div>
+                                            <div class="text-muted small" style="font-size: 0.72rem;">{{ inquiry.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fw-bold">{{ inquiry.organization_name }}</td>
+                                <td>
+                                    <span class="organization-badge">
+                                        {{ inquiry.get_organization_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="donation-badge">
+                                        {{ inquiry.get_donation_size_display }}
+                                    </span>
+                                </td>
+                                <td class="text-secondary fw-semibold">{{ inquiry.location }}</td>
+                                <td>
+                                    <div class="fw-bold">{{ inquiry.submitted_at|date:"M d, Y" }}</div>
+                                    <div class="text-muted small" style="font-size: 0.72rem;"><i class="far fa-clock me-1 text-muted"></i>{{ inquiry.submitted_at|time:"H:i" }}</div>
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn-view-message" data-bs-toggle="modal" data-bs-target="#inquiryModal{{ inquiry.id }}">
+                                        <i class="fas fa-eye me-1"></i>View Message
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Modal for each inquiry -->
+                            <div class="modal fade" id="inquiryModal{{ inquiry.id }}" tabindex="-1" aria-labelledby="inquiryModalLabel{{ inquiry.id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="inquiryModalLabel{{ inquiry.id }}">
+                                                <i class="fas fa-building me-2"></i>{{ inquiry.organization_name }} - Details
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="inquiry-detail">
+                                                        <h6>Contact Person</h6>
+                                                        <p>{{ inquiry.full_name }}</p>
+                                                    </div>
+                                                    <div class="inquiry-detail">
+                                                        <h6>Email Address</h6>
+                                                        <p><a href="mailto:{{ inquiry.email }}" class="text-decoration-none text-emerald fw-bold">{{ inquiry.email }}</a></p>
+                                                    </div>
+                                                    <div class="inquiry-detail">
+                                                        <h6>Phone Number</h6>
+                                                        <p><a href="tel:{{ inquiry.phone }}" class="text-decoration-none text-emerald fw-bold">{{ inquiry.phone }}</a></p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="inquiry-detail">
+                                                        <h6>Organization Type</h6>
+                                                        <p>{{ inquiry.get_organization_type_display }}</p>
+                                                    </div>
+                                                    <div class="inquiry-detail">
+                                                        <h6>Donation Frequency Size</h6>
+                                                        <p>{{ inquiry.get_donation_size_display }}</p>
+                                                    </div>
+                                                    <div class="inquiry-detail">
+                                                        <h6>Business Location</h6>
+                                                        <p>{{ inquiry.location }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="inquiry-detail">
+                                                <h6>Inquiry Comments / Message</h6>
+                                                <p style="white-space: pre-wrap; line-height: 1.5;">"{{ inquiry.message|default:"No description comments provided." }}"</p>
+                                            </div>
+                                            <div class="inquiry-detail mb-0">
+                                                <h6>Submission Timestamp</h6>
+                                                <p>{{ inquiry.submitted_at|date:"F d, Y" }} at {{ inquiry.submitted_at|time:"H:i" }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top-0 pt-0 justify-content-between p-3.5">
+                                            <button type="button" class="btn btn-secondary px-3.5 fw-bold" data-bs-dismiss="modal" style="border-radius: 8px; font-size: 0.8rem;">Close</button>
+                                            <a href="mailto:{{ inquiry.email }}?subject=Regarding your EcoEats Partnership Inquiry" class="btn fw-bold px-3.5" style="background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%); color: white; border: none; border-radius: 8px; font-size: 0.8rem;">
+                                                <i class="fas fa-reply me-1"></i>Reply via Mail client
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mobile Card View -->
+            <div class="mobile-cards">
+                {% for inquiry in inquiries %}
+                <div class="card inquiry-card border-0">
+                    <div class="card-header-content">
+                        <div class="user-avatar" style="background: linear-gradient(135deg, var(--brand-emerald), var(--brand-emerald-dark)); color: white; margin: 0;">
+                            {{ inquiry.full_name|first|upper }}
+                        </div>
+                        <div class="card-user-info">
+                            <h6>{{ inquiry.full_name }}</h6>
+                            <p>{{ inquiry.email }}</p>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="card-row">
+                            <span class="card-label">Organization</span>
+                            <span class="card-value">{{ inquiry.organization_name }}</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Type</span>
+                            <span class="organization-badge">{{ inquiry.get_organization_type_display }}</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Donation Size</span>
+                            <span class="donation-badge">{{ inquiry.get_donation_size_display }}</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Location</span>
+                            <span class="card-value">{{ inquiry.location }}</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Submitted</span>
+                            <span class="card-value">{{ inquiry.submitted_at|date:"M d, Y" }} at {{ inquiry.submitted_at|time:"H:i" }}</span>
+                        </div>
+                        <div class="card-actions">
+                            <button type="button" class="btn-view-message" data-bs-toggle="modal" data-bs-target="#inquiryModal{{ inquiry.id }}">
+                                <i class="fas fa-eye me-1"></i>Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="card border-0 rounded-4 shadow-sm py-5">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <span class="d-inline-flex align-items-center justify-content-center bg-light text-muted rounded-circle" style="width: 80px; height: 80px;">
+                            <i class="fas fa-envelope-open fa-3x"></i>
+                        </span>
+                    </div>
+                    <h4 class="fw-bold text-dark">No Inquiries Received</h4>
+                    <p class="text-muted small mx-auto mb-0" style="max-width: 320px;">There are currently no business partnership queries registered.</p>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</section>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

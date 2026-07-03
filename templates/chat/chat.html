@@ -1,0 +1,916 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat with {{ other_user.username }} | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --wa-bg: #efeae2;
+        --wa-message-sent: #d9fdd3;
+        --wa-message-received: #ffffff;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --slate-bg: #f8fafc;
+    }
+
+    .inbox-portal-section {
+        background-color: #f0f2f5;
+        min-height: 92vh;
+        display: flex;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Split Screen Layout */
+    .chat-layout-wrapper {
+        width: 100%;
+        max-width: 1400px;
+        margin: 1.5rem auto;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.04);
+        display: flex;
+        overflow: hidden;
+        height: 82vh;
+    }
+
+    /* Left Sidebar: Inbox User List */
+    .inbox-sidebar {
+        width: 380px;
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        background-color: #ffffff;
+        flex-shrink: 0;
+    }
+
+    .sidebar-header {
+        padding: 1rem 1.25rem;
+        background-color: var(--slate-bg);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .search-box-container {
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        background-color: #ffffff;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+    }
+
+    .search-input-wrapper i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.5rem 1rem 0.5rem 2.25rem;
+        background-color: var(--slate-bg);
+        border: 1.5px solid transparent;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        border-color: var(--brand-emerald);
+        background-color: #ffffff;
+    }
+
+    .sidebar-user-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        padding: 0.9rem 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        text-decoration: none;
+        color: var(--text-slate);
+        transition: background-color 0.2s ease;
+    }
+
+    .contact-item:hover {
+        background-color: var(--slate-bg);
+    }
+
+    .contact-item.active {
+        background-color: var(--brand-emerald-light);
+        border-left: 4px solid var(--brand-emerald);
+    }
+
+    .contact-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        color: white;
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        margin-right: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .contact-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .contact-name-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.15rem;
+    }
+
+    .contact-name {
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: var(--text-slate);
+    }
+
+    .contact-time {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    .contact-preview-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .contact-preview {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 180px;
+    }
+
+    .unread-badge {
+        background-color: var(--brand-emerald);
+        color: white;
+        font-weight: 700;
+        font-size: 0.65rem;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+    }
+
+    /* Right Workspace: Active WhatsApp Chat Console */
+    .active-chat-workspace {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--wa-bg);
+        position: relative;
+        /* WhatsApp-like subtle pattern background */
+        background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 0);
+        background-size: 20px 20px;
+    }
+
+    .chat-header-console {
+        padding: 0.75rem 1.25rem;
+        background-color: var(--slate-bg);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 10;
+    }
+
+    .active-user-box {
+        display: flex;
+        align-items: center;
+    }
+
+    .active-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--brand-emerald);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-right: 0.75rem;
+    }
+
+    .active-meta h5 {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-slate);
+    }
+    .active-meta span {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+    }
+
+    .btn-return-dashboard {
+        border: 1.5px solid var(--border-color);
+        background: #ffffff;
+        color: var(--text-slate) !important;
+        font-weight: 700;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        padding: 0.4rem 1rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    .btn-return-dashboard:hover {
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald-dark) !important;
+    }
+
+    /* Message Display Feed */
+    .messages-feed {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .msg-wrapper {
+        display: flex;
+        width: 100%;
+    }
+    .msg-wrapper.sent { justify-content: flex-end; }
+    .msg-wrapper.received { justify-content: flex-start; }
+
+    .msg-bubble {
+        max-width: 60%;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        position: relative;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        word-wrap: break-word;
+    }
+
+    .msg-wrapper.sent .msg-bubble {
+        background-color: var(--wa-message-sent);
+        color: #111b21;
+        border-top-right-radius: 0;
+    }
+    .msg-wrapper.received .msg-bubble {
+        background-color: var(--wa-message-received);
+        color: #111b21;
+        border-top-left-radius: 0;
+    }
+
+    .msg-media-box {
+        margin-bottom: 0.5rem;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .msg-media-box img {
+        max-width: 100%;
+        max-height: 240px;
+        object-fit: cover;
+        cursor: zoom-in;
+    }
+    .msg-media-box video {
+        max-width: 100%;
+        max-height: 240px;
+    }
+    .msg-media-box audio {
+        width: 100%;
+        min-width: 220px;
+    }
+
+    .msg-doc-box {
+        background-color: rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 6px;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-size: 0.78rem;
+    }
+
+    .msg-info-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.35rem;
+        margin-top: 0.2rem;
+        font-size: 0.65rem;
+        color: var(--text-muted);
+    }
+
+    .msg-tick {
+        font-size: 0.72rem;
+    }
+
+    /* Message Delete Option */
+    .delete-msg-btn {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 0.6rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    .msg-bubble:hover .delete-msg-btn {
+        opacity: 1;
+    }
+
+    /* Message Input Box */
+    .message-console-footer {
+        background-color: #f0f2f5;
+        border-top: 1px solid var(--border-color);
+        padding: 0.65rem 1rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .attachment-staging-header {
+        background-color: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.4rem 0.75rem;
+        margin-bottom: 0.5rem;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.76rem;
+    }
+
+    .input-console-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .btn-attachment {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.25rem;
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease;
+    }
+    .btn-attachment:hover {
+        background-color: var(--border-color);
+        color: var(--text-slate);
+    }
+
+    .chat-text-area {
+        flex: 1;
+        background-color: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 0.55rem 1rem;
+        font-size: 0.85rem;
+        outline: none;
+        resize: none;
+        height: 38px;
+        max-height: 100px;
+        line-height: 1.4;
+        transition: border-color 0.2s ease;
+    }
+    .chat-text-area:focus {
+        border-color: var(--brand-emerald);
+    }
+
+    .btn-chat-send {
+        background-color: var(--brand-emerald-dark);
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .btn-chat-send:hover {
+        transform: scale(1.05);
+        background-color: var(--brand-emerald);
+    }
+
+    /* Media Overlay Modal */
+    .media-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(12px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 2rem;
+    }
+    .media-overlay.active { display: flex; }
+    .media-overlay img { max-width: 90%; max-height: 90%; border-radius: 6px; }
+
+    /* Mobile Adaptations */
+    @media (max-width: 768px) {
+        .inbox-portal-section {
+            min-height: calc(100vh - 56px);
+        }
+        .chat-layout-wrapper {
+            margin: 0;
+            border-radius: 0;
+            border: none;
+            height: calc(100vh - 56px);
+        }
+        .inbox-sidebar {
+            display: none;
+        }
+        .active-chat-workspace {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="inbox-portal-section">
+    <div class="chat-layout-wrapper">
+        
+        <!-- Left Sidebar Contacts -->
+        <div class="inbox-sidebar">
+            <div class="sidebar-header">
+                <span class="fw-bold text-dark" style="font-size: 1rem;"><i class="fas fa-comments text-emerald me-1"></i> Chats</span>
+                <a href="{{ dashboard_url }}" class="btn-return-dashboard"><i class="fas fa-arrow-left me-1"></i> Back</a>
+            </div>
+
+            <!-- Search Contact List -->
+            <div class="search-box-container">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input type="text" id="contactSearch" class="search-input" placeholder="Search or start a new chat...">
+                </div>
+            </div>
+
+            <!-- User list loop -->
+            <div class="sidebar-user-list">
+                {% if chat_users %}
+                    {% for cu in chat_users %}
+                    <a href="{% url 'chat:chat' cu.user.id %}" class="contact-item contact-list-card-item {% if cu.user.id == other_user.id %}active{% endif %}" data-username="{{ cu.user.username|lower }}">
+                        <div class="contact-avatar">
+                            {{ cu.user.username|first|upper }}
+                        </div>
+                        <div class="contact-info">
+                            <div class="contact-name-row">
+                                <span class="contact-name">{{ cu.user.username }}</span>
+                                {% if cu.last_time %}
+                                <span class="contact-time">{{ cu.last_time|date:"g:i A" }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="contact-preview-row">
+                                <span class="contact-preview">{{ cu.last_message|default:"No messages yet" }}</span>
+                                {% if cu.unread_count %}
+                                <span class="unread-badge">{{ cu.unread_count }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users-slash text-muted fa-2x mb-2 opacity-50"></i>
+                        <p class="text-muted extra-small">No contacts available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Workspace: Active WhatsApp Chat Console -->
+        <div class="active-chat-workspace">
+            
+            <!-- Chat Console Header -->
+            <div class="chat-header-console">
+                <div class="active-user-box">
+                    <a href="{% url 'chat:chat_list' %}" class="btn btn-light d-md-none me-2" style="border-radius:50%; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center;"><i class="fas fa-arrow-left"></i></a>
+                    <div class="active-avatar">
+                        {{ other_user.username|first|upper }}
+                    </div>
+                    <div class="active-meta">
+                        <h5>{{ other_user.username }}</h5>
+                        <span><i class="fas fa-circle text-success" style="font-size:0.5rem; margin-right:2px;"></i> Active conversation</span>
+                    </div>
+                </div>
+                <a href="{{ dashboard_url }}" class="btn-return-dashboard"><i class="fas fa-arrow-left me-1"></i> Back</a>
+            </div>
+
+            <!-- Messages display grid -->
+            <div id="messages-container" class="messages-feed">
+                {% for msg in messages %}
+                <div class="msg-wrapper {% if msg.sender == current_user %}sent{% else %}received{% endif %}" data-message-id="{{ msg.id }}">
+                    <div class="msg-bubble">
+                        {% if msg.sender == current_user %}
+                        <button class="delete-msg-btn" onclick="deleteMessage({{ msg.id }})" title="Delete Message"><i class="fas fa-times"></i></button>
+                        {% endif %}
+
+                        <!-- File / Media Attachment view -->
+                        {% if msg.file %}
+                            <div class="msg-media-box">
+                                {% if msg.file.url|slice:"-4:"|lower == ".jpg" or msg.file.url|slice:"-4:"|lower == ".png" or msg.file.url|slice:"-5:"|lower == ".jpeg" or msg.file.url|slice:"-4:"|lower == ".gif" %}
+                                    <img src="{{ msg.file.url }}" alt="Attachment" onclick="zoomImage(this.src)">
+                                {% elif msg.file.url|slice:"-4:"|lower == ".mp4" or msg.file.url|slice:"-5:"|lower == ".webm" %}
+                                    <video src="{{ msg.file.url }}" controls></video>
+                                {% elif msg.file.url|slice:"-4:"|lower == ".mp3" or msg.file.url|slice:"-4:"|lower == ".wav" or msg.file.url|slice:"-4:"|lower == ".ogg" %}
+                                    <audio src="{{ msg.file.url }}" controls></audio>
+                                {% else %}
+                                    <div class="msg-doc-box">
+                                        <i class="fas fa-file-arrow-down fa-lg text-emerald"></i>
+                                        <div class="text-truncate" style="max-width: 140px;">
+                                            <a href="{{ msg.file.url }}" target="_blank" class="text-dark fw-bold text-decoration-none d-block text-truncate">{{ msg.file.name|slice:"11:" }}</a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Message Content text -->
+                        {% if msg.content %}
+                        <div class="msg-content">{{ msg.content }}</div>
+                        {% endif %}
+
+                        <!-- Info Footer (Time + WhatsApp tick marks) -->
+                        <div class="msg-info-footer">
+                            <span>{{ msg.timestamp|date:"g:i A" }}</span>
+                            {% if msg.sender == current_user %}
+                                <span class="msg-tick" id="tick-{{ msg.id }}">
+                                    {% if msg.is_read %}
+                                        <i class="fas fa-check-double text-primary"></i> <!-- Blue tick -->
+                                    {% else %}
+                                        <i class="fas fa-check-double text-muted"></i> <!-- Gray tick -->
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Staged File Header and Chat Input panel -->
+            <div class="message-console-footer">
+                
+                <!-- Attachment Notice Stager -->
+                <div class="attachment-staging-header" id="stagedNotice">
+                    <span class="text-dark"><i class="fas fa-paperclip text-emerald me-1.5"></i> Attached: <strong id="stagedFilename">file.png</strong></span>
+                    <button class="btn btn-sm btn-outline-secondary py-0.5 px-2 rounded-2" style="font-size:0.68rem;" onclick="clearStagedFile()"><i class="fas fa-times me-1"></i> Clear</button>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" id="chatForm" class="input-console-bar">
+                    {% csrf_token %}
+                    <!-- File upload trigger -->
+                    <button type="button" class="btn-attachment" id="clipBtn" title="Attach file"><i class="fas fa-paperclip"></i></button>
+                    
+                    <!-- Hidden native file input -->
+                    <input type="file" name="file" id="id_file" style="display:none;" onchange="fileSelected(this)">
+                    
+                    <!-- Textarea message -->
+                    <textarea name="content" class="chat-text-area" placeholder="Type a message..." id="message-input"></textarea>
+                    
+                    <!-- Send button -->
+                    <button type="submit" class="btn-chat-send" title="Send message"><i class="fas fa-paper-plane"></i></button>
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Image Zoom Overlay -->
+<div class="media-overlay" id="zoomOverlay" onclick="closeZoom()">
+    <img id="zoomImage" src="" alt="Zoomed view">
+</div>
+
+<!-- Message Options Overlay (Edit/Delete) -->
+<div class="media-overlay" id="optionsOverlay" onclick="closeOptionsModal()">
+    <div class="card border-0 shadow-lg p-4 rounded-4" style="width: min(420px, 90vw); background: #ffffff; pointer-events: auto;" onclick="event.stopPropagation()">
+        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+            <h5 class="fw-bold text-dark mb-0" style="font-size: 0.95rem;"><i class="fas fa-pen-to-square text-emerald me-1.5"></i> Message Actions</h5>
+            <button class="btn-close" onclick="closeOptionsModal()"></button>
+        </div>
+        
+        <input type="hidden" id="optionsMessageId">
+        
+        <div class="mb-3">
+            <label class="form-label text-muted extra-small fw-bold text-uppercase mb-1" style="font-size:0.65rem;">Message Content</label>
+            <textarea id="editMessageText" class="form-control" style="font-size: 0.85rem; border-radius: 8px; resize: none; height: 100px; border-color: var(--border-color);"></textarea>
+        </div>
+        
+        <div class="d-flex gap-2 justify-content-between mt-4">
+            <button class="btn btn-danger btn-sm px-3 rounded-2 fw-bold" onclick="executeDeleteFromModal()" style="font-size: 0.8rem;"><i class="fas fa-trash-can me-1.5"></i> Delete</button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light btn-sm border px-3 rounded-2 fw-bold" onclick="closeOptionsModal()" style="font-size: 0.8rem;">Cancel</button>
+                <button class="btn btn-emerald btn-sm px-3 rounded-2 fw-bold text-white border-0" onclick="executeEditFromModal()" style="font-size: 0.8rem; background: var(--brand-emerald-dark);"><i class="fas fa-save me-1.5"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const otherUserId = {{ other_user.id|default:0 }};
+{% if messages %}
+let lastMessageId = {{ messages.last.id }};
+{% else %}
+let lastMessageId = 0;
+{% endif %}
+
+// Auto-scroll messages feed
+const messagesContainer = document.getElementById('messages-container');
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+// Auto-expand input text area
+const textInput = document.getElementById('message-input');
+textInput.addEventListener('input', function() {
+    this.style.height = '38px';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+
+// Staged file functions
+function fileSelected(input) {
+    if (input.files && input.files.length > 0) {
+        document.getElementById('stagedFilename').innerText = input.files[0].name;
+        document.getElementById('stagedNotice').style.display = 'flex';
+    }
+}
+
+function clearStagedFile() {
+    document.getElementById('id_file').value = "";
+    document.getElementById('stagedNotice').style.display = 'none';
+}
+
+// Zoom image overlay
+function zoomImage(src) {
+    const overlay = document.getElementById('zoomOverlay');
+    document.getElementById('zoomImage').src = src;
+    overlay.classList.add('active');
+}
+
+function closeZoom() {
+    document.getElementById('zoomOverlay').classList.remove('active');
+}
+
+// Message Options Modal functions
+function openOptionsModal(messageId, bubble) {
+    document.getElementById('optionsMessageId').value = messageId;
+    const contentDiv = bubble.querySelector('.msg-content');
+    document.getElementById('editMessageText').value = contentDiv ? contentDiv.innerText : '';
+    document.getElementById('optionsOverlay').classList.add('active');
+}
+
+function closeOptionsModal() {
+    document.getElementById('optionsOverlay').classList.remove('active');
+}
+
+function executeEditFromModal() {
+    const messageId = document.getElementById('optionsMessageId').value;
+    const newContent = document.getElementById('editMessageText').value.trim();
+    if (!newContent) {
+        alert('Message content cannot be empty!');
+        return;
+    }
+
+    fetch(`/chat/messages/${messageId}/edit/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: newContent })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const wrapper = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (wrapper) {
+                let contentDiv = wrapper.querySelector('.msg-content');
+                if (!contentDiv) {
+                    contentDiv = document.createElement('div');
+                    contentDiv.className = 'msg-content';
+                    wrapper.querySelector('.msg-bubble').insertBefore(contentDiv, wrapper.querySelector('.msg-info-footer'));
+                }
+                contentDiv.innerText = data.content;
+            }
+            closeOptionsModal();
+        } else {
+            alert('Failed to edit message: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(err => console.error('Edit message error:', err));
+}
+
+// Delete Message AJAX
+function deleteMessage(messageId) {
+    if (confirm('Are you sure you want to delete this message?')) {
+        fetch(`/chat/messages/${messageId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const element = document.querySelector(`[data-message-id="${messageId}"]`);
+                if (element) element.remove();
+            }
+        })
+        .catch(err => console.error('Delete message error:', err));
+    }
+}
+
+function executeDeleteFromModal() {
+    const messageId = document.getElementById('optionsMessageId').value;
+    deleteMessage(messageId);
+    closeOptionsModal();
+}
+
+// Clip button click
+document.getElementById('clipBtn').addEventListener('click', function() {
+    document.getElementById('id_file').click();
+});
+
+// Polling for incoming messages
+function pollForMessages() {
+    fetch(`/chat/${otherUserId}/messages/?last_message_id=${lastMessageId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.messages && data.messages.length > 0) {
+                const isAtBottom = messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 15;
+
+                data.messages.forEach(message => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `msg-wrapper ${message.is_sent ? 'sent' : 'received'}`;
+                    messageElement.setAttribute('data-message-id', message.id);
+                    
+                    let mediaContent = '';
+                    if (message.file_url) {
+                        const fileName = message.file_name || '';
+                        if (fileName.match(/\.(jpg|jpeg|png|gif)$/i)) {
+                            mediaContent = `<div class="msg-media-box"><img src="${message.file_url}" alt="Attachment" onclick="zoomImage('${message.file_url}')"></div>`;
+                        } else if (fileName.match(/\.(mp4|webm)$/i)) {
+                            mediaContent = `<div class="msg-media-box"><video src="${message.file_url}" controls></video></div>`;
+                        } else if (fileName.match(/\.(mp3|wav|ogg)$/i)) {
+                            mediaContent = `<div class="msg-media-box"><audio src="${message.file_url}" controls></audio></div>`;
+                        } else {
+                            mediaContent = `<div class="msg-media-box"><div class="msg-doc-box"><i class="fas fa-file-arrow-down fa-lg text-emerald"></i><div class="text-truncate" style="max-width: 140px;"><a href="${message.file_url}" target="_blank" class="text-dark fw-bold text-decoration-none d-block text-truncate">${fileName}</a></div></div></div>`;
+                        }
+                    }
+
+                    let textContent = message.content ? `<div class="msg-content">${message.content}</div>` : '';
+                    let ticks = message.is_sent ? `
+                        <span class="msg-tick" id="tick-${message.id}">
+                            <i class="fas fa-check-double ${message.is_read ? 'text-primary' : 'text-muted'}"></i>
+                        </span>
+                    ` : '';
+
+                    messageElement.innerHTML = `
+                        <div class="msg-bubble">
+                            ${!message.is_sent ? '' : `<button class="delete-msg-btn" onclick="deleteMessage(${message.id})" title="Delete Message"><i class="fas fa-times"></i></button>`}
+                            ${mediaContent}
+                            ${textContent}
+                            <div class="msg-info-footer">
+                                <span>${message.timestamp}</span>
+                                ${ticks}
+                            </div>
+                        </div>
+                    `;
+
+                    messagesContainer.appendChild(messageElement);
+                    lastMessageId = Math.max(lastMessageId, message.id);
+                });
+
+                if (isAtBottom) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }
+        })
+        .catch(err => console.error('Message polling error:', err));
+}
+
+// Polling for read status receipts (turn sent ticks blue)
+function pollReadStatus() {
+    fetch(`/chat/${otherUserId}/read-status/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.read_message_ids && data.read_message_ids.length > 0) {
+                data.read_message_ids.forEach(id => {
+                    const tickSpan = document.getElementById(`tick-${id}`);
+                    if (tickSpan) {
+                        const icon = tickSpan.querySelector('.fa-check-double');
+                        if (icon && icon.classList.contains('text-muted')) {
+                            icon.classList.remove('text-muted');
+                            icon.classList.add('text-primary'); // Blue tick
+                        }
+                    }
+                });
+            }
+        })
+        .catch(err => console.error('Read receipt polling error:', err));
+}
+
+// Search sidebar contacts filter
+document.addEventListener('DOMContentLoaded', function() {
+    const contactSearch = document.getElementById('contactSearch');
+    if (contactSearch) {
+        contactSearch.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            document.querySelectorAll('.contact-list-card-item').forEach(item => {
+                const username = item.getAttribute('data-username');
+                if (username.includes(query)) {
+                    item.style.setProperty('display', 'flex', 'important');
+                } else {
+                    item.style.setProperty('display', 'none', 'important');
+                }
+            });
+        });
+    }
+
+    // Ctrl + Click listener for editing/deleting messages
+    messagesContainer.addEventListener('click', function(e) {
+        const bubble = e.target.closest('.msg-bubble');
+        if (!bubble) return;
+
+        if (e.ctrlKey) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const wrapper = bubble.closest('.msg-wrapper');
+            const messageId = wrapper.getAttribute('data-message-id');
+            const isSent = wrapper.classList.contains('sent');
+
+            if (!isSent) {
+                alert("You can only edit or delete your own messages!");
+                return;
+            }
+
+            openOptionsModal(messageId, bubble);
+        }
+    });
+
+    // Initialize intervals
+    const messagePollInterval = setInterval(pollForMessages, 3000);
+    const readReceiptPollInterval = setInterval(pollReadStatus, 3000);
+
+    // Clear intervals on page unload
+    window.addEventListener('beforeunload', function() {
+        clearInterval(messagePollInterval);
+        clearInterval(readReceiptPollInterval);
+    });
+});
+</script>
+{% endblock %}

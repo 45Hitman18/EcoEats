@@ -1,0 +1,502 @@
+{% extends 'donor/base.html' %}
+{% load static %}
+
+{% block title %}Manage Food Listings - Donor{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    /* Professional Sustainability Palette */
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --text-slate: #1f2937;
+        --text-muted: #6b7280;
+        --border-color: #e2e8f0;
+    }
+
+    .manage-food-wrapper {
+        background-color: #f8fafc;
+        min-height: calc(100vh - 160px);
+        padding-bottom: 3rem;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .status-available {
+        background-color: var(--brand-emerald-light);
+        color: var(--brand-emerald-dark);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-requested {
+        background-color: #fffbeb;
+        color: #b45309;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .status-donated {
+        background-color: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .status-expired {
+        background-color: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    /* Food Cards */
+    .food-card {
+        border-radius: 1rem;
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        overflow: hidden;
+    }
+
+    .food-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    }
+
+    .food-card-header {
+        background: #ffffff;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .food-card-body {
+        padding: 1.25rem 1.5rem;
+    }
+
+    /* Progress Bar */
+    .custom-progress {
+        height: 6px;
+        background-color: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .custom-progress-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        padding: 0.45rem 0.85rem;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        border: 1.5px solid;
+    }
+
+    .btn-view {
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald-dark);
+        background-color: transparent;
+    }
+
+    .btn-view:hover {
+        background-color: var(--brand-emerald-light);
+    }
+
+    .btn-expired {
+        border-color: #f59e0b;
+        color: #b45309;
+        background-color: transparent;
+    }
+
+    .btn-expired:hover {
+        background-color: #fffbeb;
+    }
+
+    .btn-delete {
+        border-color: #ef4444;
+        color: #b91c1c;
+        background-color: transparent;
+    }
+
+    .btn-delete:hover {
+        background-color: #fef2f2;
+    }
+
+    /* Add New Food Button */
+    .btn-add-new {
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        border: none;
+        padding: 0.55rem 1rem;
+        font-weight: 700;
+        border-radius: 8px;
+        color: white !important;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.15);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-add-new:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 16px -3px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-back-dashboard {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        padding: 0.55rem 1rem;
+        font-weight: 700;
+        border-radius: 8px;
+        color: var(--text-slate);
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-back-dashboard:hover {
+        background-color: #f8fafc;
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald-dark);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    /* Countdown Styling */
+    .countdown-text {
+        font-family: monospace;
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: var(--text-slate);
+    }
+
+    .countdown-expired {
+        color: #ef4444;
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.65rem;
+    }
+
+    .info-item {
+        background: #f8fafc;
+        padding: 0.55rem 0.75rem;
+        border-radius: 8px;
+        border: 1px solid #f1f5f9;
+    }
+
+    .info-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.15rem;
+    }
+
+    .info-value {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-slate);
+    }
+</style>
+
+<div class="manage-food-wrapper py-2">
+    <div class="container">
+        
+        <!-- Breadcrumb & Header -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb extra-small fw-bold text-uppercase mb-1" style="letter-spacing: 0.05em; font-size: 0.7rem;">
+                        <li class="breadcrumb-item"><span class="text-muted">Donor Portal</span></li>
+                        <li class="breadcrumb-item active text-emerald">Manage inventory</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold text-dark mb-0">Inventory Control</h1>
+            </div>
+            <div class="d-flex gap-2.5">
+                <a href="{% url 'donor:dashboard' %}" class="btn btn-back-dashboard">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <a href="{% url 'donor:add_food' %}" class="btn btn-add-new">
+                    <i class="fas fa-plus"></i> Add New Food
+                </a>
+            </div>
+        </div>
+
+        {% if food_listings %}
+            <!-- Bulk Actions Form Wrapper -->
+            <form id="bulkManageForm" method="post" action="{% url 'donor:bulk_manage_food' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" id="bulkActionInput" value="">
+
+                <!-- Sticky/Top Bulk Actions Control Panel -->
+                <div class="card border-0 shadow-sm p-3 mb-4 d-flex flex-row align-items-center justify-content-between flex-wrap gap-3" style="border-radius:12px; background-color:#ffffff; border-left: 5px solid var(--brand-emerald) !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" id="selectAllListings" style="cursor:pointer; width:1.1rem; height:1.1rem;">
+                            <label class="form-check-label small fw-bold text-dark ms-1.5" for="selectAllListings" style="cursor:pointer; user-select:none;">Select All</label>
+                        </div>
+                        <span class="text-muted small">| <span id="selectedCount" class="fw-bold text-emerald">0</span> selected</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" onclick="submitBulk('expire')" class="btn btn-sm btn-outline-warning border rounded-3 px-3 py-1.5 fw-bold" style="font-size:0.75rem;">
+                            <i class="fas fa-calendar-times me-1"></i> Mark Expired
+                        </button>
+                        <button type="button" onclick="submitBulk('delete')" class="btn btn-sm btn-outline-danger border rounded-3 px-3 py-1.5 fw-bold" style="font-size:0.75rem;">
+                            <i class="fas fa-trash me-1"></i> Delete Selected
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                {% for food in food_listings %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card food-card h-100 border-0">
+                            <div class="food-card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 fw-bold text-dark text-truncate" style="max-width: 60%; display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" name="selected_listings" value="{{ food.id }}" class="form-check-input bulk-checkbox" style="width:1.05rem; height:1.05rem; cursor:pointer;">
+                                        <i class="fas fa-utensils" style="color: var(--brand-emerald);"></i>
+                                        {{ food.food_name }}
+                                    </h6>
+                                    <span class="status-badge
+                                        {% if food.status == 'available' %}status-available
+                                        {% elif food.status == 'requested' %}status-requested
+                                        {% elif food.status == 'donated' %}status-donated
+                                        {% else %}status-expired{% endif %}">
+                                        <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
+                                        {{ food.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="food-card-body d-flex flex-column justify-content-between h-100">
+                                <div>
+                                    <!-- Info Grid -->
+                                    <div class="info-grid mb-3">
+                                        <div class="info-item">
+                                            <div class="info-label">Type</div>
+                                            <div class="info-value text-truncate">{{ food.get_food_type_display }}</div>
+                                        </div>
+                                        <div class="info-item">
+                                            <div class="info-label">Quantity</div>
+                                            <div class="info-value text-truncate">{{ food.quantity }}</div>
+                                        </div>
+                                        <div class="info-item">
+                                            <div class="info-label">Prepared</div>
+                                            <div class="info-value text-truncate">{{ food.prepared_time|date:"M d, H:i" }}</div>
+                                        </div>
+                                        <div class="info-item">
+                                            <div class="info-label">Expires</div>
+                                            <div class="info-value text-truncate">{{ food.expiry_time|date:"M d, H:i" }}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Expiry Progress -->
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                            <span class="fw-bold text-dark" style="font-size: 0.75rem;">Expiry Progress</span>
+                                            <span class="countdown-text" id="countdown-{{ food.id }}">Calculating...</span>
+                                        </div>
+                                        <div class="custom-progress">
+                                            <div class="custom-progress-bar" id="progress-{{ food.id }}" style="width: 0%; background-color: var(--brand-emerald);"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Notes -->
+                                    {% if food.notes %}
+                                        <div class="mb-3">
+                                            <div class="info-label mb-1">Notes</div>
+                                            <div class="info-value text-secondary small" style="line-height: 1.4; font-weight: 500;">{{ food.notes }}</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="d-flex flex-wrap gap-2 pt-2 border-top mt-2">
+                                    {% if food.status == 'available' or food.status == 'requested' %}
+                                        <a href="{% url 'donor:view_requests' food.id %}" class="btn-action btn-view">
+                                            <i class="fas fa-eye"></i> View Requests
+                                        </a>
+                                        <a href="{% url 'donor:mark_expired' food.id %}" class="btn-action btn-expired">
+                                            <i class="fas fa-calendar-times"></i> Expire
+                                        </a>
+                                    {% endif %}
+                                    <a href="{% url 'donor:delete_food' food.id %}" class="btn-action btn-delete"
+                                       onclick="return confirm('Are you sure you want to delete this food listing?')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            </form>
+        {% else %}
+            <!-- Empty State -->
+            <div class="card border-0 rounded-4 shadow-sm py-5">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <span class="d-inline-flex align-items-center justify-content-center bg-light text-muted rounded-circle" style="width: 80px; height: 80px;">
+                            <i class="fas fa-utensils fa-3x"></i>
+                        </span>
+                    </div>
+                    <h4 class="fw-bold text-dark">No Food Listings Yet</h4>
+                    <p class="text-muted small mx-auto mb-4" style="max-width: 320px;">Start by adding your first surplus food item to help reduce waste and share it with community groups.</p>
+                    <a href="{% url 'donor:add_food' %}" class="btn btn-add-new px-4 py-2 fw-bold text-white text-uppercase" style="border-radius: 8px; font-size: 0.8rem; letter-spacing: 0.05em; text-decoration: none;">
+                        Add Your First Food Item
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var foodData = [
+        {% for food in food_listings %}
+        {
+            id: {{ food.id }},
+            expiryTime: {{ food.expiry_time|date:"U" }} * 1000,
+            preparedTime: {{ food.prepared_time|date:"U" }} * 1000
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    foodData.forEach(function(food) {
+        var countdownElement = document.getElementById('countdown-' + food.id);
+        var progressElement = document.getElementById('progress-' + food.id);
+        var totalDuration = food.expiryTime - food.preparedTime;
+
+        var countdownInterval = setInterval(function() {
+            var now = new Date().getTime();
+            var distance = food.expiryTime - now;
+
+            if (distance < 0) {
+                countdownElement.innerHTML = 'Expired';
+                countdownElement.classList.add('countdown-expired');
+                progressElement.style.width = '100%';
+                progressElement.style.backgroundColor = '#ef4444';
+                clearInterval(countdownInterval);
+            } else {
+                // Calculate progress percentage
+                var elapsed = now - food.preparedTime;
+                var progressPercent = Math.min((elapsed / totalDuration) * 100, 100);
+
+                // Update progress bar color based on time remaining
+                if (progressPercent < 50) {
+                    progressElement.style.backgroundColor = '#10b981'; // Green
+                } else if (progressPercent < 75) {
+                    progressElement.style.backgroundColor = '#f59e0b'; // Yellow
+                } else {
+                    progressElement.style.backgroundColor = '#ef4444'; // Red
+                }
+
+                progressElement.style.width = progressPercent + '%';
+
+                // Format countdown
+                var hours = Math.floor(distance / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                if (hours > 24) {
+                    var days = Math.floor(hours / 24);
+                    countdownElement.innerHTML = days + 'd ' + (hours % 24) + 'h';
+                } else {
+                    countdownElement.innerHTML = hours + 'h ' + minutes + 'm ' + seconds + 's';
+                }
+            }
+        }, 1000);
+    });
+
+    // Bulk Action JavaScript Controls
+    const selectAllCheckbox = document.getElementById('selectAllListings');
+    const bulkCheckboxes = document.querySelectorAll('.bulk-checkbox');
+    const selectedCountSpan = document.getElementById('selectedCount');
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            bulkCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateSelectedCount();
+        });
+    }
+
+    bulkCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            updateSelectedCount();
+            
+            // Update Select All checkbox state
+            const allChecked = Array.from(bulkCheckboxes).every(checkbox => checkbox.checked);
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allChecked;
+            }
+        });
+    });
+
+    function updateSelectedCount() {
+        const count = Array.from(bulkCheckboxes).filter(checkbox => checkbox.checked).length;
+        if (selectedCountSpan) {
+            selectedCountSpan.innerText = count;
+        }
+    }
+
+    window.submitBulk = function(actionType) {
+        const count = Array.from(bulkCheckboxes).filter(checkbox => checkbox.checked).length;
+        if (count === 0) {
+            alert('Please select at least one listing.');
+            return;
+        }
+        
+        const confirmationMessage = actionType === 'delete' 
+            ? 'Are you sure you want to delete ' + count + ' selected listings?' 
+            : 'Are you sure you want to mark ' + count + ' selected listings as expired?';
+            
+        if (confirm(confirmationMessage)) {
+            document.getElementById('bulkActionInput').value = actionType;
+            document.getElementById('bulkManageForm').submit();
+        }
+    };
+});
+</script>
+{% endblock %}

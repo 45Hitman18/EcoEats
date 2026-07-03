@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Food Safety & Legal Compliance | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-300: #cbd5e1;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --border-color: #e2e8f0;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+    }
+
+    .compliance-section {
+        background-color: var(--slate-50);
+        min-height: calc(100vh - 140px);
+        padding: 3rem 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    .compliance-card {
+        border-radius: 1rem;
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .legal-alert-box {
+        background-color: #f0fdf4;
+        border: 1.5px solid #bbf7d0;
+        color: #166534;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .info-tag {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        background-color: #eff6ff;
+        color: #1e40af;
+        border: 1px solid rgba(30, 64, 175, 0.1);
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Checklist rule item */
+    .checklist-rule-item {
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        background-color: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.85rem;
+    }
+
+    .rule-number-badge {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: var(--brand-emerald-light);
+        color: var(--brand-emerald-dark);
+        font-weight: 800;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* Waiver certificate styling */
+    .certificate-container {
+        border: 4px double #cbd5e1;
+        padding: 2.5rem;
+        background-color: #fffdfa;
+        position: relative;
+        border-radius: 8px;
+    }
+
+    .certificate-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-15deg);
+        font-size: 5rem;
+        font-weight: 900;
+        color: rgba(16, 185, 129, 0.04);
+        pointer-events: none;
+        user-select: none;
+        z-index: 1;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px !important;
+        border: 1.5px solid var(--border-color) !important;
+        padding: 0.65rem 0.85rem !important;
+    }
+    .form-control:focus {
+        border-color: var(--brand-emerald) !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    }
+
+    .btn-generate {
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        border: none;
+        color: white !important;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 0.65rem 1.25rem;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.1);
+        transition: all 0.25s ease;
+    }
+    .btn-generate:hover {
+        box-shadow: 0 6px 12px rgba(16, 185, 129, 0.2);
+        transform: translateY(-1px);
+    }
+
+    /* Print styling optimization for PDF print of certificate and manual */
+    @media print {
+        /* General print rules to hide global layouts */
+        nav, footer, #ecoChatbotFab, #ecoChatbotWindow, .no-print, .btn {
+            display: none !important;
+        }
+
+        /* Manual print mode: hide right column */
+        body.print-manual-mode .col-lg-6:nth-child(2) {
+            display: none !important;
+        }
+        body.print-manual-mode .col-lg-6:nth-child(1) {
+            width: 100% !important;
+            display: block !important;
+        }
+
+        /* Certificate print mode: hide left column and form */
+        body.print-cert-mode .col-lg-6:nth-child(1) {
+            display: none !important;
+        }
+        body.print-cert-mode .col-lg-6:nth-child(2) {
+            width: 100% !important;
+            display: block !important;
+        }
+        body.print-cert-mode #waiver-form-card {
+            display: none !important;
+        }
+        body.print-cert-mode #waiver-certificate-card {
+            display: block !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+        }
+        body.print-cert-mode .certificate-container {
+            border: 2px solid #334155 !important;
+            background-color: #ffffff !important;
+        }
+    }
+</style>
+
+<section class="compliance-section">
+    <div class="container py-2">
+        
+        <!-- Header -->
+        <div class="text-center mb-5 no-print">
+            <h1 class="h2 fw-bold text-dark mb-2">Food Safety & Legal Compliance</h1>
+            <p class="text-muted small mx-auto" style="max-width: 500px;">Ensuring donor safety, liability protection, and standardized handover protocols.</p>
+        </div>
+
+        <div class="row g-5">
+            <!-- Left Column: Legal Protection & FSSAI Guidelines -->
+            <div class="col-lg-6">
+                <div class="card compliance-card border-0 p-4 p-md-5 h-100">
+                    <h4 class="fw-bold text-dark mb-3"><i class="fas fa-gavel text-emerald me-1.5"></i> Donor Liability Protection</h4>
+                    
+                    <div class="legal-alert-box mb-4">
+                        <div class="d-flex gap-3">
+                            <i class="fas fa-shield-alt fa-2x mt-1"></i>
+                            <div>
+                                <h6 class="fw-bold m-0 mb-1">Good Samaritan Legal Safety</h6>
+                                <p class="small m-0" style="line-height: 1.5;">
+                                    Under the **Food Safety and Standards (Safe Food and Share Food) Regulations, 2019**, any food donor donating surplus food in good faith is **fully protected from legal liability** for any side-effects resulting from consumption, provided quality handling protocols are followed.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-dark mb-3" style="font-size: 1.05rem;">FSSAI Compliance Standards</h5>
+                    <p class="text-muted small mb-4" style="line-height: 1.6;">
+                        To guarantee safe donations, donors must comply with baseline handling criteria:
+                    </p>
+
+                    <!-- Guidelines checklist -->
+                    <div class="checklist-rule-item">
+                        <div class="rule-number-badge">1</div>
+                        <div>
+                            <strong class="text-dark small d-block mb-0.5">Temperature Thresholds</strong>
+                            <span class="text-muted extra-small">Keep cold foods refrigerated below **5°C** and hot prepared meals heated above **60°C** before handover.</span>
+                        </div>
+                    </div>
+
+                    <div class="checklist-rule-item">
+                        <div class="rule-number-badge">2</div>
+                        <div>
+                            <strong class="text-dark small d-block mb-0.5">Grade Food Packaging</strong>
+                            <span class="text-muted extra-small">Surplus items must be packed in clean, sealed, food-grade containers or bags to prevent contamination.</span>
+                        </div>
+                    </div>
+
+                    <div class="checklist-rule-item">
+                        <div class="rule-number-badge">3</div>
+                        <div>
+                            <strong class="text-dark small d-block mb-0.5">Expiry and Traceability</strong>
+                            <span class="text-muted extra-small">Clearly write the item name, preparation date, and estimated shelf life on the packaging label.</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 border-top pt-3 d-flex justify-content-between align-items-center no-print">
+                        <span class="info-tag"><i class="fas fa-file-shield"></i> Legal Compliant</span>
+                        <a href="javascript:void(0);" onclick="printSafetyManual();" class="text-emerald fw-bold text-decoration-none small hover-emerald-dark">
+                            <i class="fas fa-download me-1"></i> Download Safety Manual PDF
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Column: Interactive Digital Handover Waiver -->
+            <div class="col-lg-6">
+                <!-- 1. Form state card -->
+                <div class="card compliance-card border-0 p-4 p-md-5" id="waiver-form-card">
+                    <h4 class="fw-bold text-dark mb-2"><i class="fas fa-file-contract text-emerald me-1.5"></i> Digital Handover Protocol</h4>
+                    <p class="text-muted small mb-4">Complete this checklist during food collection handover to generate a signed digital compliance waiver.</p>
+                    
+                    <form id="waiverForm" onsubmit="generateWaiver(event)">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-uppercase text-muted" style="font-size:0.65rem;">Donor Entity</label>
+                                <input type="text" class="form-control" id="donorName" placeholder="e.g. Grand Palace Hotel" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-uppercase text-muted" style="font-size:0.65rem;">Receiver NGO</label>
+                                <input type="text" class="form-control" id="receiverName" placeholder="e.g. Feeding Delhi Shelter" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-uppercase text-muted" style="font-size:0.65rem;">Food Item Description</label>
+                                <input type="text" class="form-control" id="foodItem" placeholder="e.g. 50 Servings Cooked Rice & Dal" required>
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold text-dark mb-3" style="font-size:0.8rem;">Safety Verification Declaration</h6>
+                        
+                        <div class="form-check mb-2.5">
+                            <input class="form-check-input" type="checkbox" id="check_fresh" required>
+                            <label class="form-check-label small text-muted" for="check_fresh">
+                                Food is fresh, inspected, and free from spoilage or contamination.
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-2.5">
+                            <input class="form-check-input" type="checkbox" id="check_temp" required>
+                            <label class="form-check-label small text-muted" for="check_temp">
+                                Food has been maintained at FSSAI compliant temperatures.
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="check_seal" required>
+                            <label class="form-check-label small text-muted" for="check_seal">
+                                Packaging is sealed, food-grade, and labeled with preparedness details.
+                            </label>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-generate">
+                                <i class="fas fa-signature"></i> Sign & Generate Handover Waiver
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 2. Result state card (Certificate) - hidden by default -->
+                <div class="card compliance-card border-0 p-4 p-md-5 d-none" id="waiver-certificate-card">
+                    <div id="print-area" class="certificate-container">
+                        <div class="certificate-watermark">ECOEATS</div>
+                        
+                        <div class="text-center mb-4">
+                            <h5 class="fw-bold text-dark m-0" style="letter-spacing: 0.05em; font-family:'Georgia', serif;">HANDOVER COMPLIANCE CERTIFICATE</h5>
+                            <span class="extra-small text-muted text-uppercase" style="letter-spacing: 0.1em; font-size: 0.6rem;">EcoEats Trust & Safety Protocol</span>
+                        </div>
+
+                        <div class="my-4 small" style="line-height: 1.8; color: #334155;">
+                            This document certifies that the donor <strong id="cert-donor"></strong> has handed over surplus food items:
+                            <div class="p-2 border-start border-4 border-emerald bg-light my-2 text-dark font-monospace" id="cert-food"></div>
+                            to receiver NGO <strong id="cert-receiver"></strong>. Both parties declare under penalty of regulation that safety checks (temperature regulation, grade packaging, and visual inspection) were successfully satisfied.
+                        </div>
+
+                        <div class="row mt-5 pt-3 border-top g-3">
+                            <div class="col-6">
+                                <div class="extra-small text-muted">Verification Code</div>
+                                <strong class="small text-dark font-monospace" id="cert-code"></strong>
+                            </div>
+                            <div class="col-6 text-end">
+                                <div class="extra-small text-muted">Certification Date</div>
+                                <strong class="small text-dark" id="cert-date"></strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4 no-print">
+                        <button type="button" class="btn btn-sm btn-outline-secondary px-3" onclick="resetWaiver()">
+                            <i class="fas fa-undo"></i> Reset Form
+                        </button>
+                        <button type="button" class="btn btn-sm btn-success px-4" style="background-color: var(--brand-emerald-dark); border: none;" onclick="printWaiver()">
+                            <i class="fas fa-print"></i> Print Handover Record
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script>
+    function generateWaiver(event) {
+        event.preventDefault();
+        
+        // Fetch values
+        const donor = document.getElementById('donorName').value;
+        const receiver = document.getElementById('receiverName').value;
+        const food = document.getElementById('foodItem').value;
+
+        // Generate unique waiver code
+        const code = 'EE-WAI-' + Math.floor(100000 + Math.random() * 900000);
+
+        // Populate certificate
+        document.getElementById('cert-donor').textContent = donor;
+        document.getElementById('cert-receiver').textContent = receiver;
+        document.getElementById('cert-food').textContent = food;
+        document.getElementById('cert-code').textContent = code;
+        document.getElementById('cert-date').textContent = new Date().toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Hide form and show certificate card
+        document.getElementById('waiver-form-card').classList.add('d-none');
+        document.getElementById('waiver-certificate-card').classList.remove('d-none');
+    }
+
+    function resetWaiver() {
+        // Reset form inputs
+        document.getElementById('waiverForm').reset();
+
+        // Show form and hide certificate card
+        document.getElementById('waiver-certificate-card').classList.add('d-none');
+        document.getElementById('waiver-form-card').classList.remove('d-none');
+    }
+
+    function printSafetyManual() {
+        document.body.classList.add('print-manual-mode');
+        document.body.classList.remove('print-cert-mode');
+        window.print();
+        
+        // Clean up classes after print dialog opens
+        setTimeout(() => {
+            document.body.classList.remove('print-manual-mode');
+        }, 1000);
+    }
+
+    function printWaiver() {
+        document.body.classList.add('print-cert-mode');
+        document.body.classList.remove('print-manual-mode');
+        window.print();
+        
+        // Clean up classes after print dialog opens
+        setTimeout(() => {
+            document.body.classList.remove('print-cert-mode');
+        }, 1000);
+    }
+</script>
+{% endblock %}

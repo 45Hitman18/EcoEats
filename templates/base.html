@@ -1,0 +1,951 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EcoEats{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'css/chatbot.css' %}">
+
+    <style>
+        :root {
+            --brand-emerald: #10b981;
+            --brand-emerald-dark: #065f46;
+            --brand-emerald-light: #ecfdf5;
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-500: #64748b;
+            --slate-50: #f8fafc;
+            --border-color: #e2e8f0;
+            --nav-height: 72px;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--slate-50);
+            color: var(--slate-900);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* --- Professional Navbar --- */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            height: var(--nav-height);
+            transition: var(--transition-smooth);
+            padding: 0.5rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--slate-900) !important;
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+        }
+
+        .logo-box {
+            background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+            flex-shrink: 0;
+        }
+
+        .nav-link {
+            font-weight: 600;
+            color: var(--slate-500) !important;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem !important;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-link:hover {
+            color: var(--brand-emerald) !important;
+        }
+
+        /* User Profile Pill */
+        .user-profile-pill {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            padding: 4px 12px 4px 4px !important;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-profile-pill:hover {
+            border-color: var(--brand-emerald);
+            background-color: var(--brand-emerald-light);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .avatar-small {
+            width: 30px;
+            height: 30px;
+            background: var(--brand-emerald);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        /* --- Global Components --- */
+        .btn-brand {
+            background-color: var(--brand-emerald);
+            color: white;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1.5rem;
+            border: none;
+            transition: var(--transition-smooth);
+            white-space: nowrap;
+        }
+
+        .btn-brand:hover {
+            background-color: var(--brand-emerald-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+            color: white;
+        }
+
+        .btn-brand.btn-sm {
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        /* --- Enterprise Footer --- */
+        footer {
+            background-color: #ffffff;
+            color: var(--slate-900);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-heading {
+            color: var(--slate-900);
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-link {
+            color: var(--slate-500);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: var(--transition-smooth);
+            display: block;
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-link:hover {
+            color: var(--brand-emerald);
+            padding-left: 4px;
+        }
+
+        .social-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--brand-emerald);
+            transition: var(--transition-smooth);
+        }
+
+        .social-btn:hover {
+            background: var(--brand-emerald);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .extra-small { font-size: 0.7rem; }
+
+        /* Platform Dropdown Styles */
+        .platform-dropdown {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 0.5rem 0;
+            min-width: 180px;
+            animation: fadeInDown 0.3s ease-out;
+        }
+
+        .platform-item {
+            color: #374151;
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.75rem 1.25rem;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            display: block;
+        }
+
+        .platform-item:hover {
+            color: var(--brand-emerald);
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+
+        /* Override Bootstrap's blue active states for our dropdown items */
+        .platform-dropdown .dropdown-item.active,
+        .platform-dropdown .dropdown-item:active,
+        .dropdown-menu .dropdown-item.active,
+        .dropdown-menu .dropdown-item:active {
+            color: var(--brand-emerald-dark) !important;
+            background-color: var(--brand-emerald-light) !important;
+            font-weight: 600;
+        }
+
+        .platform-dropdown .dropdown-item:hover {
+            color: var(--brand-emerald-dark) !important;
+            background-color: rgba(16, 185, 129, 0.08) !important;
+        }
+
+        /* Remove blue outline shadows on focus */
+        .nav-link:focus,
+        .navbar-toggler:focus,
+        .dropdown-toggle:focus,
+        .btn:focus,
+        .platform-link:focus {
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        .faq-item {
+            color: var(--brand-emerald) !important;
+            font-weight: 600;
+        }
+
+        .platform-arrow {
+            font-size: 0.7rem;
+            transition: transform 0.3s ease;
+        }
+
+        .platform-link[aria-expanded="true"] .platform-arrow {
+            transform: rotate(180deg);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Navbar */
+        @media (max-width: 991.98px) {
+            .navbar {
+                padding: 0.75rem 0;
+            }
+
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+
+            .navbar-collapse {
+                background-color: white;
+                border-radius: 12px;
+                margin-top: 1rem;
+                padding: 1rem;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            .navbar-nav {
+                align-items: stretch !important;
+            }
+
+            .nav-item {
+                margin-bottom: 0.5rem;
+            }
+
+            .nav-link {
+                font-size: 0.95rem;
+                padding: 0.75rem 1rem !important;
+                border-radius: 8px;
+                display: block;
+            }
+
+            .nav-link:hover {
+                background-color: var(--brand-emerald-light);
+            }
+
+            .platform-dropdown {
+                position: static !important;
+                transform: none !important;
+                box-shadow: none;
+                border: 1px solid var(--border-color);
+                margin-top: 0.5rem;
+                margin-left: 1rem;
+            }
+
+            .dropdown-menu.show {
+                display: block;
+                position: static !important;
+                transform: none !important;
+            }
+
+            .btn-brand.btn-sm {
+                padding: 0.75rem 1rem;
+                font-size: 0.95rem;
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .ms-lg-3 {
+                margin-left: 0 !important;
+            }
+
+            .user-profile-pill {
+                padding: 0.75rem 1rem !important;
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+
+            .navbar-brand {
+                font-size: 1rem;
+            }
+
+            .logo-box {
+                width: 32px;
+                height: 32px;
+            }
+
+            .navbar-collapse {
+                margin-top: 0.75rem;
+                padding: 0.75rem;
+            }
+
+            .nav-item {
+                margin-bottom: 0.35rem;
+            }
+
+            .nav-link {
+                font-size: 0.9rem;
+                padding: 0.65rem 0.85rem !important;
+            }
+
+            .platform-dropdown {
+                margin-left: 0.75rem;
+                padding: 0.35rem 0;
+            }
+
+            .platform-item {
+                padding: 0.65rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .user-profile-pill {
+                padding: 0.65rem 0.85rem !important;
+                font-size: 0.85rem;
+            }
+
+            .avatar-small {
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
+            }
+
+            .btn-brand.btn-sm {
+                padding: 0.65rem 0.9rem;
+                font-size: 0.9rem;
+            }
+
+            .dropdown-menu.dropdown-menu-end {
+                position: static !important;
+                margin-left: 1rem;
+                margin-top: 0.5rem;
+                border: 1px solid var(--border-color);
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .navbar {
+                padding: 0.4rem 0;
+            }
+
+            .navbar-brand {
+                font-size: 0.9rem;
+            }
+
+            .logo-box {
+                width: 28px;
+                height: 28px;
+                margin-right: 0.5rem !important;
+            }
+
+            .navbar-collapse {
+                margin-top: 0.5rem;
+                padding: 0.5rem;
+            }
+
+            .nav-item {
+                margin-bottom: 0.25rem;
+            }
+
+            .nav-link {
+                font-size: 0.85rem;
+                padding: 0.6rem 0.75rem !important;
+            }
+
+            .platform-dropdown {
+                min-width: auto;
+                margin-left: 0.5rem;
+                padding: 0.25rem 0;
+            }
+
+            .platform-item {
+                padding: 0.6rem 0.85rem;
+                font-size: 0.8rem;
+            }
+
+            .user-profile-pill {
+                padding: 0.6rem 0.75rem !important;
+                font-size: 0.8rem;
+            }
+
+            .avatar-small {
+                width: 26px;
+                height: 26px;
+                font-size: 0.65rem;
+            }
+
+            .btn-brand.btn-sm {
+                padding: 0.6rem 0.85rem;
+                font-size: 0.85rem;
+            }
+
+            .dropdown-menu.dropdown-menu-end {
+                margin-left: 0.5rem;
+                margin-top: 0.35rem;
+            }
+
+            .dropdown-item {
+                padding: 0.6rem 0.85rem !important;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Footer Responsive */
+        @media (max-width: 767.98px) {
+            footer .d-flex {
+                flex-direction: column !important;
+                gap: 1.5rem !important;
+            }
+
+            .logo-box {
+                width: 20px;
+                height: 20px;
+            }
+
+            .logo-box i {
+                font-size: 0.5rem !important;
+            }
+
+            footer span {
+                text-align: center;
+            }
+        }
+
+        /* --- Global Components --- */
+        .btn-brand {
+            background-color: var(--brand-emerald);
+            color: white;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1.5rem;
+            border: none;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-brand:hover {
+            background-color: var(--brand-emerald-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+            color: white;
+        }
+
+        /* --- Enterprise Footer --- */
+        footer {
+            background-color: var(--slate-900);
+            color: #f1f5f9;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .footer-heading {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-link {
+            color: var(--slate-500);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: var(--transition-smooth);
+            display: block;
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-link:hover {
+            color: var(--brand-emerald);
+            padding-left: 4px;
+        }
+
+        .social-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: var(--transition-smooth);
+        }
+
+        .social-btn:hover {
+            background: var(--brand-emerald);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .extra-small { font-size: 0.7rem; }
+
+        /* Platform Dropdown Styles */
+        .platform-dropdown {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 0.5rem 0;
+            min-width: 180px;
+            animation: fadeInDown 0.3s ease-out;
+        }
+
+        .platform-item {
+            color: #374151;
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.75rem 1.25rem;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            display: block;
+        }
+
+        .platform-item:hover {
+            color: var(--brand-emerald);
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+
+        .faq-item {
+            color: var(--brand-emerald) !important;
+            font-weight: 600;
+        }
+
+        .platform-arrow {
+            font-size: 0.7rem;
+            transition: transform 0.3s ease;
+        }
+
+        .platform-link[aria-expanded="true"] .platform-arrow {
+            transform: rotate(180deg);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <nav class="navbar navbar-expand-lg sticky-top py-0">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'accounts:home' %}">
+                <div class="logo-box me-2">
+                    <i class="fas fa-leaf text-white small"></i>
+                </div>
+                <span>EcoEats</span>
+            </a>
+
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                <i class="fas fa-bars-staggered"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:home' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'leaderboard' %}active{% endif %}" href="{% url 'leaderboard' %}">Leaderboard</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle platform-link" href="#" id="platformDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            The Platform <i class="fas fa-chevron-down ms-1 platform-arrow"></i>
+                        </a>
+                        <ul class="dropdown-menu platform-dropdown shadow-lg border-0 rounded-4 mt-2" aria-labelledby="platformDropdown">
+                            <li><a class="dropdown-item platform-item {% if request.resolver_match.url_name == 'how_it_works' %}active{% endif %}" href="{% url 'how_it_works' %}">How It Works</a></li>
+                            <li><a class="dropdown-item platform-item faq-item {% if request.resolver_match.url_name == 'faqs' %}active{% endif %}" href="{% url 'faqs' %}">FAQs</a></li>
+                            <li><a class="dropdown-item platform-item {% if request.resolver_match.url_name == 'about_us' %}active{% endif %}" href="{% url 'about_us' %}">About Us</a></li>
+                            <li><hr class="dropdown-divider opacity-50"></li>
+                            <li><a class="dropdown-item platform-item {% if request.resolver_match.url_name == 'compliance' %}active{% endif %}" href="{% url 'compliance' %}"><i class="fas fa-gavel me-2 text-emerald"></i>Compliance Center</a></li>
+                        </ul>
+                    </li>
+
+                    {% if user.is_authenticated %}
+                        <!-- Notification Bell for Donors and Receivers -->
+                        {% if user.profile.role == 'donor' or user.profile.role == 'receiver' %}
+                        <li class="nav-item ms-lg-2 me-lg-2">
+                            <a class="nav-link position-relative" href="#" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal">
+                                <i class="fas fa-bell" style="font-size: 1.25rem; color: var(--brand-emerald);"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount" style="font-size: 0.65rem; display: none;">
+                                    0
+                                </span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="nav-item dropdown ms-lg-3">
+                            <a class="nav-link dropdown-toggle user-profile-pill d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <div class="avatar-small me-2 shadow-sm">
+                                    {{ user.username|slice:":1"|upper }}
+                                </div>
+                                <span class="text-dark fw-bold">{{ user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2">
+                                <li><a class="dropdown-item py-2" href="{% url 'accounts:profile' %}"><i class="far fa-user-circle me-2 text-emerald"></i>My Profile</a></li>
+                                <li><a class="dropdown-item py-2" href="{% url 'accounts:dashboard' %}"><i class="fas fa-columns me-2 text-emerald"></i>Dashboard</a></li>
+                                {% if user.profile.role == 'receiver' %}
+                                <li><a class="dropdown-item py-2" href="{% url 'receiver:route_map' %}"><i class="fas fa-route me-2 text-emerald"></i>Route Coordinator</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider opacity-50"></li>
+                                <li><a class="dropdown-item py-2 text-danger fw-bold" href="{% url 'accounts:logout' %}"><i class="fas fa-power-off me-2"></i>Sign Out</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item ms-lg-3">
+                            <a class="nav-link px-3" href="{% url 'accounts:login' %}">Sign In</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-brand btn-sm shadow-sm" href="{% url 'accounts:register' %}">Get Started</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="py-3 mt-5" style="background-color: #ffffff; border-top: 1px solid var(--border-color); color: var(--slate-900);">
+        <div class="container">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="logo-box" style="width:24px; height:24px;">
+                        <i class="fas fa-leaf text-white" style="font-size: 0.75rem;"></i>
+                    </div>
+                    <span class="fw-bold" style="font-size: 0.9rem; color: var(--slate-900);">EcoEats</span>
+                    <span style="font-size: 0.75rem; color: var(--slate-500);">•</span>
+                    <span style="font-size: 0.75rem; color: var(--slate-500);">Building zero-waste infrastructure</span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span style="font-size: 0.75rem; color: var(--slate-500);"><i class="fas fa-shield-halved me-1 text-emerald"></i> ISO 27001 Secure</span>
+                    <span style="font-size: 0.75rem; color: var(--slate-500);"><i class="fas fa-server me-1 text-emerald"></i> System: Operational</span>
+                    <span style="font-size: 0.75rem; color: var(--slate-500);">© 2025 EcoDistribute</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notification Modal -->
+    {% if user.is_authenticated %}
+    {% if user.profile.role == 'donor' or user.profile.role == 'receiver' %}
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius: 1rem; border: 1px solid var(--border-color);">
+                <div class="modal-header" style="background: linear-gradient(135deg, var(--brand-emerald-light), #ffffff); border-bottom: 1px solid var(--border-color);">
+                    <h5 class="modal-title fw-bold" id="notificationModalLabel">
+                        <i class="fas fa-bell me-2" style="color: var(--brand-emerald);"></i>Notifications
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="notificationList" style="max-height: 400px;">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                        <p>Loading notifications...</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="markAllNotificationsRead()">
+                        <i class="fas fa-check-double me-1"></i>Mark All Read
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Close platform dropdown when clicking outside
+        document.addEventListener('DOMContentLoaded', function() {
+            const platformDropdown = document.getElementById('platformDropdown');
+            const dropdownMenu = platformDropdown.nextElementSibling;
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!platformDropdown.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                    const bsDropdown = new bootstrap.Dropdown(platformDropdown);
+                    bsDropdown.hide();
+                }
+            });
+        });
+
+        {% if user.is_authenticated %}
+        {% if user.profile.role == 'donor' or user.profile.role == 'receiver' %}
+        // Notification System
+        let notificationCheckInterval;
+        const userRole = '{{ user.profile.role }}';
+
+        function updateNotificationCount() {
+            const url = userRole === 'donor' ? '{% url "donor:get_notification_count" %}' : '{% url "receiver:get_notification_count" %}';
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const countBadge = document.getElementById('notificationCount');
+                    if (data.count > 0) {
+                        countBadge.textContent = data.count;
+                        countBadge.style.display = 'inline';
+                    } else {
+                        countBadge.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error fetching notification count:', error));
+        }
+
+        function loadNotifications() {
+            const url = userRole === 'donor' ? '{% url "donor:get_notifications" %}' : '{% url "receiver:get_notifications" %}';
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const notificationList = document.getElementById('notificationList');
+                    
+                    if (data.notifications.length === 0) {
+                        notificationList.innerHTML = `
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                                <p>No new notifications</p>
+                            </div>
+                        `;
+                    } else {
+                        let html = '<div class="list-group list-group-flush">';
+                        data.notifications.forEach(notif => {
+                            const icon = notif.type === 'new_request' ? 'fa-hand-paper' : 
+                                        notif.type === 'request_approved' ? 'fa-check-circle' :
+                                        notif.type === 'request_rejected' ? 'fa-times-circle' :
+                                        notif.type === 'request_completed' ? 'fa-check-double' : 'fa-bell';
+                            const iconColor = notif.type === 'new_request' ? 'var(--brand-emerald)' : 
+                                            notif.type === 'request_approved' ? '#22c55e' :
+                                            notif.type === 'request_rejected' ? '#ef4444' :
+                                            notif.type === 'request_completed' ? '#3b82f6' : '#6366f1';
+                            
+                            html += `
+                                <div class="list-group-item border-0 border-bottom py-3" style="cursor: pointer;" onclick="markNotificationRead(${notif.id}, ${notif.request_id})">
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div style="width: 40px; height: 40px; background-color: ${iconColor}15; color: ${iconColor}; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                            <i class="fas ${icon}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 fw-bold text-dark">${notif.title}</h6>
+                                            <p class="mb-1 text-muted small">${notif.message}</p>
+                                            <small class="text-muted"><i class="far fa-clock me-1"></i>${notif.created_at}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        notificationList.innerHTML = html;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    document.getElementById('notificationList').innerHTML = `
+                        <div class="text-center text-danger py-4">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p>Error loading notifications</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function markNotificationRead(notificationId, requestId) {
+            const baseUrl = userRole === 'donor' ? '/donor' : '/receiver';
+            fetch(`${baseUrl}/notifications/mark-read/${notificationId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateNotificationCount();
+                    // Redirect based on role and request_id
+                    if (requestId) {
+                        const redirectUrl = userRole === 'donor' ? '/donor/view-all-requests/' : '{% url "receiver:dashboard" %}';
+                        window.location.href = redirectUrl;
+                    }
+                }
+            })
+            .catch(error => console.error('Error marking notification as read:', error));
+        }
+
+        function markAllNotificationsRead() {
+            const url = userRole === 'donor' ? '{% url "donor:mark_all_notifications_read" %}' : '{% url "receiver:mark_all_notifications_read" %}';
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateNotificationCount();
+                    loadNotifications();
+                }
+            })
+            .catch(error => console.error('Error marking all notifications as read:', error));
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Load notifications when modal is opened
+        document.getElementById('notificationModal').addEventListener('show.bs.modal', function() {
+            loadNotifications();
+        });
+
+        // Check for new notifications every 30 seconds
+        updateNotificationCount();
+        notificationCheckInterval = setInterval(updateNotificationCount, 30000);
+
+        // Clear interval when page is unloaded
+        window.addEventListener('beforeunload', function() {
+            clearInterval(notificationCheckInterval);
+        });
+        {% endif %}
+        {% endif %}
+    </script>
+
+    <!-- EcoEats AI Chatbot Widget -->
+    <!-- Floating Action Button -->
+    <button class="eco-chatbot-fab" id="ecoChatbotFab" title="EcoEats Support Chat">
+        <i class="fa-solid fa-comments"></i>
+        <div class="eco-chatbot-badge" id="ecoChatbotBadge" style="display: none;"></div>
+    </button>
+
+    <!-- Chat Window -->
+    <div class="eco-chatbot-window" id="ecoChatbotWindow">
+        <!-- Chat Header -->
+        <div class="eco-chatbot-header">
+            <div class="eco-chatbot-info">
+                <div class="eco-chatbot-avatar">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="eco-chatbot-title-container">
+                    <h3 class="eco-chatbot-title">EcoEats Bot</h3>
+                    <span class="eco-chatbot-status">Online</span>
+                </div>
+            </div>
+            <button class="eco-chatbot-close" id="ecoChatbotClose" title="Close Chat">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Chat Body (Messages) -->
+        <div class="eco-chatbot-body" id="ecoChatbotBody">
+            <!-- Messages are dynamically populated here by chatbot.js -->
+        </div>
+
+        <!-- Quick Reply Suggestions -->
+        <div class="eco-chatbot-quick-replies">
+            <span class="eco-chatbot-replies-title">Suggested Topics</span>
+            <div class="eco-chatbot-chips-container" id="ecoChatbotChips">
+                <!-- Chips are dynamically populated here by chatbot.js -->
+            </div>
+        </div>
+
+        <!-- Chat Input Footer -->
+        <div class="eco-chatbot-footer">
+            <input type="text" class="eco-chatbot-input" id="ecoChatbotInput" placeholder="Ask a question..." autocomplete="off">
+            <button class="eco-chatbot-send" id="ecoChatbotSend" title="Send Message">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="{% static 'js/chatbot.js' %}"></script>
+
+</body>
+</html>

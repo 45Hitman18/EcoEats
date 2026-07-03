@@ -1,0 +1,384 @@
+{% extends 'donor/base.html' %}
+{% load static %}
+
+{% block title %}Donor Dashboard | EcoDistribute{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    /* Dashboard Specific Variables */
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #065f46;
+        --brand-emerald-light: #ecfdf5;
+        --slate-bg: #f8fafc;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --warning-soft: #fffbeb;
+        --warning-dark: #b45309;
+    }
+
+    .dashboard-wrapper {
+        background-color: var(--slate-bg);
+        min-height: 100vh;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    /* KPI Card Styling */
+    .stat-card {
+        border-radius: 1.25rem;
+        border: 1px solid var(--border-color);
+        background: white;
+        transition: transform 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        background-color: var(--brand-emerald-light);
+        color: var(--brand-emerald);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    /* Progress Bars */
+    .progress-custom {
+        height: 6px;
+        background-color: #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-bar-emerald {
+        background-color: var(--brand-emerald);
+    }
+
+    /* Quick Action Cards */
+    .action-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 1.25rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+
+    .action-card:hover {
+        border-color: var(--brand-emerald);
+        background-color: var(--brand-emerald-light);
+    }
+
+    .action-icon-circle {
+        width: 64px;
+        height: 64px;
+        background-color: var(--slate-bg);
+        color: var(--brand-emerald);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .action-card:hover .action-icon-circle {
+        background-color: var(--brand-emerald);
+        color: white;
+    }
+
+    .btn-emerald {
+        background-color: var(--brand-emerald);
+        color: white;
+        font-weight: 700;
+        border-radius: 0.75rem;
+        padding: 0.6rem 1.25rem;
+        transition: all 0.3s;
+    }
+
+    .btn-emerald:hover {
+        background-color: var(--brand-emerald-dark);
+        color: white;
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+    }
+
+    .extra-small { font-size: 0.75rem; }
+</style>
+
+<div class="dashboard-wrapper py-5">
+    <div class="container-fluid px-md-5">
+        
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb extra-small fw-bold text-uppercase mb-2" style="letter-spacing: 0.05em;">
+                        <li class="breadcrumb-item"><a href="#" class="text-muted text-decoration-none">Donor Portal</a></li>
+                        <li class="breadcrumb-item active text-emerald">Dashboard</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold text-dark mb-1">Welcome back, {{ user.username }}</h1>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-hands-helping text-emerald me-1"></i>
+                    Your contributions are supporting {{ supported_centers }} local community centers today.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'donor:add_food' %}" class="btn btn-emerald shadow-sm">
+                    <i class="fas fa-plus me-2 small"></i>New Surplus Listing
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card stat-card shadow-sm border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.05em;">Inventory Level</span>
+                            <div class="icon-box">
+                                <i class="fas fa-boxes fa-lg"></i>
+                            </div>
+                        </div>
+                        <h2 class="fw-bold mb-1">{{ total_food_posted }} <span class="h6 text-muted">Items</span></h2>
+                        
+                        <div class="mt-auto">
+                            {% if expiring_soon %}
+                                <div class="badge w-100 text-start py-2 px-3 mb-3" style="background-color: var(--warning-soft); color: var(--warning-dark); border: 1px solid #fde68a;">
+                                    <i class="fas fa-hourglass-half me-2"></i> {{ expiring_soon.count }} Items Expiring Soon
+                                </div>
+                            {% else %}
+                                <div class="text-success small fw-bold mb-3">
+                                    <i class="fas fa-check-circle me-1"></i> Inventory status: Stable
+                                </div>
+                            {% endif %}
+                            <div class="progress-custom">
+                                <div class="progress-bar progress-bar-emerald" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card stat-card shadow-sm border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.05em;">Pending Claims</span>
+                            <div class="icon-box" style="background-color: #e0f2fe; color: #0369a1;">
+                                <i class="fas fa-truck-loading fa-lg"></i>
+                            </div>
+                        </div>
+                        <h2 class="fw-bold mb-1">{{ active_requests }} <span class="h6 text-muted">Requests</span></h2>
+                        <p class="text-muted small mt-2">Verified NGOs waiting for your confirmation.</p>
+                        
+                        <div class="mt-auto">
+                            <div class="progress-custom">
+                                <div class="progress-bar" style="width: 40%; background-color: #0ea5e9;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card stat-card shadow-sm border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.05em;">Community Impact</span>
+                            <div class="icon-box" style="background-color: #fef2f2; color: #dc2626;">
+                                <i class="fas fa-heart fa-lg"></i>
+                            </div>
+                        </div>
+                        <h2 class="fw-bold mb-1">{{ donated_food_count }} <span class="h6 text-muted">Donations</span></h2>
+                        <div class="text-success small fw-bold mt-2">
+                            <i class="fas fa-level-up-alt me-1"></i> {{ donation_increase_percentage }}% increase <span class="text-muted fw-normal">vs last month</span>
+                        </div>
+
+                        <div class="mt-auto pt-3">
+                            <div class="progress-custom">
+                                <div class="progress-bar" style="width: 90%; background-color: #ef4444;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="fw-bold text-dark mb-4">Quick Operations</h5>
+        <div class="row g-4">
+            <!-- Register Surplus -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'donor:add_food' %}" class="text-decoration-none">
+                    <div class="card action-card shadow-sm border-0 h-100">
+                        <div class="card-body p-3 d-flex align-items-center">
+                            <div class="action-icon-circle me-3" style="width: 48px; height: 48px; min-width: 48px; font-size: 1.1rem;">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.88rem;">Register Surplus</h6>
+                                <p class="text-muted extra-small mb-0" style="font-size: 0.72rem; line-height: 1.3;">List new surplus food items for local NGOs.</p>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fas fa-chevron-right text-light" style="font-size: 0.8rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Inventory Control -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'donor:manage_food' %}" class="text-decoration-none">
+                    <div class="card action-card shadow-sm border-0 h-100">
+                        <div class="card-body p-3 d-flex align-items-center">
+                            <div class="action-icon-circle me-3" style="width: 48px; height: 48px; min-width: 48px; font-size: 1.1rem;">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.88rem;">Inventory Control</h6>
+                                <p class="text-muted extra-small mb-0" style="font-size: 0.72rem; line-height: 1.3;">Manage listings, track claims, update status.</p>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fas fa-chevron-right text-light" style="font-size: 0.8rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- View Feedback -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'donor:view_feedback' %}" class="text-decoration-none">
+                    <div class="card action-card shadow-sm border-0 h-100">
+                        <div class="card-body p-3 d-flex align-items-center">
+                            <div class="action-icon-circle me-3" style="width: 48px; height: 48px; min-width: 48px; font-size: 1.1rem;">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.88rem;">View Feedback</h6>
+                                <p class="text-muted extra-small mb-0" style="font-size: 0.72rem; line-height: 1.3;">See receiver ratings and donation feedback.</p>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fas fa-chevron-right text-light" style="font-size: 0.8rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Sustainability Report -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'donor:donor_analytics' %}" class="text-decoration-none">
+                    <div class="card action-card shadow-sm border-0 h-100">
+                        <div class="card-body p-3 d-flex align-items-center">
+                            <div class="action-icon-circle me-3" style="width: 48px; height: 48px; min-width: 48px; font-size: 1.1rem; background-color: var(--brand-emerald-light); color: var(--brand-emerald);">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.88rem;">Sustainability Report</h6>
+                                <p class="text-muted extra-small mb-0" style="font-size: 0.72rem; line-height: 1.3;">Track CO2 offsets, food yield, and CSR metrics.</p>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fas fa-chevron-right text-light" style="font-size: 0.8rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- NGO Directory -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'donor:ngo_directory' %}" class="text-decoration-none">
+                    <div class="card action-card shadow-sm border-0 h-100">
+                        <div class="card-body p-3 d-flex align-items-center">
+                            <div class="action-icon-circle me-3" style="width: 48px; height: 48px; min-width: 48px; font-size: 1.1rem; background-color: #eff6ff; color: #1e40af;">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.88rem;">NGO Directory</h6>
+                                <p class="text-muted extra-small mb-0" style="font-size: 0.72rem; line-height: 1.3;">Find partners, allocate directly, or broadcast alerts.</p>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fas fa-chevron-right text-light" style="font-size: 0.8rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Community Leaderboard -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'leaderboard' %}" class="text-decoration-none">
+                    <div class="card action-card shadow-sm border-0 h-100">
+                        <div class="card-body p-3 d-flex align-items-center">
+                            <div class="action-icon-circle me-3" style="width: 48px; height: 48px; min-width: 48px; font-size: 1.1rem; background-color: #fef3c7; color: #d97706;">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.88rem;">Leaderboard</h6>
+                                <p class="text-muted extra-small mb-0" style="font-size: 0.72rem; line-height: 1.3;">See rankings, milestones, and champion badges.</p>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fas fa-chevron-right text-light" style="font-size: 0.8rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- CSR & ESG Certificate -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'donor:csr_impact' %}" class="text-decoration-none">
+                    <div class="card action-card shadow-sm border-0 h-100">
+                        <div class="card-body p-3 d-flex align-items-center">
+                            <div class="action-icon-circle me-3" style="width: 48px; height: 48px; min-width: 48px; font-size: 1.1rem; background-color: #e0f2fe; color: #0284c7;">
+                                <i class="fas fa-certificate"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.88rem;">CSR Certification</h6>
+                                <p class="text-muted extra-small mb-0" style="font-size: 0.72rem; line-height: 1.3;">Get printable ESG badges, carbon offsets, and medals.</p>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fas fa-chevron-right text-light" style="font-size: 0.8rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Drivers Directory -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'donor:driver_directory' %}" class="text-decoration-none">
+                    <div class="card action-card shadow-sm border-0 h-100">
+                        <div class="card-body p-3 d-flex align-items-center">
+                            <div class="action-icon-circle me-3" style="width: 48px; height: 48px; min-width: 48px; font-size: 1.1rem; background-color: #fef3c7; color: #d97706;">
+                                <i class="fas fa-truck-fast"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.88rem;">Drivers Directory</h6>
+                                <p class="text-muted extra-small mb-0" style="font-size: 0.72rem; line-height: 1.3;">Find local drivers, send delivery tasks, and chat.</p>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fas fa-chevron-right text-light" style="font-size: 0.8rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Chat Button -->
+        {% if user.is_authenticated %}
+        <div class="text-center mt-4">
+            <a href="{% url 'chat:chat_list' %}" class="btn btn-emerald shadow-sm">
+                <i class="fas fa-comments me-2"></i>Start Chat
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

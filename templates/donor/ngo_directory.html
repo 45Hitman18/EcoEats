@@ -1,0 +1,485 @@
+{% extends 'donor/base.html' %}
+{% load static %}
+
+{% block title %}NGO Directory | Donor Portal{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --brand-emerald-glow: rgba(16, 185, 129, 0.15);
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --border-color: #e2e8f0;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+    }
+
+    .directory-container {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        color: var(--text-slate);
+    }
+
+    /* Filters card */
+    .filter-card {
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        background: #ffffff;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    /* Redesigned NGO horizontal card style */
+    .ngo-card {
+        border-radius: 1rem;
+        border: 1.5px solid var(--border-color);
+        background: #ffffff;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow: hidden;
+    }
+    .ngo-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--brand-emerald);
+        box-shadow: 0 10px 20px -3px rgba(16, 185, 129, 0.08);
+    }
+
+    /* Badges */
+    .verified-badge {
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        background-color: var(--brand-emerald-light);
+        color: var(--brand-emerald-dark);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        padding: 0.25rem 0.65rem;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .distance-badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        background-color: #eff6ff;
+        color: #1e40af;
+        border: 1px solid rgba(30, 64, 175, 0.1);
+        padding: 0.25rem 0.65rem;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .capability-tag {
+        font-size: 0.68rem;
+        font-weight: 700;
+        background-color: #f1f5f9;
+        color: #475569;
+        padding: 0.25rem 0.6rem;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .capability-tag.active {
+        background-color: #e0f2fe;
+        color: #0369a1;
+        border-color: #bae6fd;
+    }
+
+    /* Unified Button Heights and Sizing */
+    .btn-action-pill {
+        height: 38px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        border-radius: 50px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.25s ease;
+    }
+
+    .btn-broadcast {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border: none;
+        color: white !important;
+        padding: 0 1.25rem;
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+    }
+    .btn-broadcast:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-white-nav {
+        border: 1.5px solid var(--border-color);
+        background: #ffffff;
+        color: var(--text-slate) !important;
+        padding: 0 1.25rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .btn-white-nav:hover {
+        background-color: var(--slate-50);
+        border-color: #cbd5e1;
+    }
+
+    .btn-allocate {
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        border: none;
+        color: white !important;
+        font-weight: 700;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.1);
+    }
+    .btn-allocate:hover {
+        box-shadow: 0 6px 12px rgba(16, 185, 129, 0.2);
+        transform: translateY(-0.5px);
+    }
+
+    .btn-chat-ngo {
+        border: 1.5px solid var(--border-color);
+        color: var(--text-slate) !important;
+        background: #ffffff;
+        font-weight: 700;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    .btn-chat-ngo:hover {
+        background-color: var(--slate-50);
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald-dark) !important;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px !important;
+        border: 1.5px solid var(--border-color) !important;
+        padding: 0.55rem 0.75rem !important;
+    }
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--brand-emerald) !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    }
+
+    .modal-content {
+        border-radius: 1rem !important;
+        border: none !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    }
+</style>
+
+<div class="directory-container container-fluid px-md-5">
+    
+    <!-- Header Block -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-7">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb extra-small fw-bold text-uppercase mb-2 text-muted" style="letter-spacing: 0.05em; font-size: 0.72rem;">
+                    <li class="breadcrumb-item"><a href="{% url 'donor:dashboard' %}" class="text-muted text-decoration-none hover-emerald">Donor Portal</a></li>
+                    <li class="breadcrumb-item active text-emerald" style="color: var(--brand-emerald) !important;">NGO Directory</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold text-dark mb-1">NGO & Community Partners</h1>
+            <p class="text-muted mb-0 small">Directly allocate surplus listings to trusted organizations or send urgent notifications.</p>
+        </div>
+        <div class="col-md-5 d-flex justify-content-md-end align-items-center gap-2 mt-3 mt-md-0 flex-wrap">
+            <button type="button" class="btn btn-action-pill btn-broadcast" data-bs-toggle="modal" data-bs-target="#broadcastModal">
+                <i class="fas fa-bullhorn animate-bounce"></i> Broadcast 3km Alert
+            </button>
+            <a href="{% url 'donor:dashboard' %}" class="btn btn-action-pill btn-white-nav text-decoration-none">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+
+
+    <div class="row g-4">
+        <!-- Search and Filters Panel (Left Column) -->
+        <div class="col-lg-3">
+            <div class="card filter-card border-0 p-4">
+                <h6 class="fw-bold text-dark mb-3">Directory Search</h6>
+                
+                <form method="get" action="{% url 'donor:ngo_directory' %}" id="filterForm">
+                    <!-- Search Input -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase" style="font-size:0.65rem;">Keywords</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0" style="border: 1.5px solid var(--border-color); border-radius: 8px 0 0 8px;"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0" style="border-radius: 0 8px 8px 0;" name="q" placeholder="Name or location..." value="{{ search_query }}">
+                        </div>
+                    </div>
+
+                    <!-- Capability Checks -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-2.5" style="font-size:0.65rem;">Filters</label>
+                        
+                        <div class="form-check form-check-emerald mb-2.5">
+                            <input class="form-check-input" type="checkbox" name="is_verified" id="check_verified" {% if is_verified %}checked{% endif %}>
+                            <label class="form-check-label small text-dark" for="check_verified">
+                                Verified NGOs Only
+                            </label>
+                        </div>
+                        
+                        <div class="form-check form-check-emerald mb-2.5">
+                            <input class="form-check-input" type="checkbox" name="has_fridge" id="check_fridge" {% if has_fridge %}checked{% endif %}>
+                            <label class="form-check-label small text-dark" for="check_fridge">
+                                Has Cold Storage (Fridge)
+                            </label>
+                        </div>
+
+                        <div class="form-check form-check-emerald mb-2.5">
+                            <input class="form-check-input" type="checkbox" name="has_freezer" id="check_freezer" {% if has_freezer %}checked{% endif %}>
+                            <label class="form-check-label small text-dark" for="check_freezer">
+                                Has Freezer Storage
+                            </label>
+                        </div>
+
+                        <div class="form-check form-check-emerald mb-2.5">
+                            <input class="form-check-input" type="checkbox" name="has_warmers" id="check_warmers" {% if has_warmers %}checked{% endif %}>
+                            <label class="form-check-label small text-dark" for="check_warmers">
+                                Has Hot Food Warmers
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-sm btn-success fw-bold py-2" style="background-color: var(--brand-emerald-dark); border:none; border-radius: 8px;">
+                            Apply Filters
+                        </button>
+                        <a href="{% url 'donor:ngo_directory' %}" class="btn btn-sm btn-outline-secondary py-2" style="border-color: var(--border-color); border-radius: 8px;">
+                            Clear Form
+                        </a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- NGOs List Grid (Right Column: horizontal layout) -->
+        <div class="col-lg-9">
+            <div class="d-flex flex-column gap-3">
+                {% if ngo_list %}
+                    {% for ngo in ngo_list %}
+                    <div class="card ngo-card border-0">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+                                <!-- Left Info Block -->
+                                <div class="col-lg-8">
+                                    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                        <h5 class="fw-bold text-dark m-0">{{ ngo.profile.user.first_name }} {{ ngo.profile.user.last_name|default:'' }}</h5>
+                                        <span class="text-muted small">@{{ ngo.profile.user.username }}</span>
+                                        {% if ngo.profile.is_verified %}
+                                        <span class="verified-badge ms-lg-2">
+                                            <i class="fas fa-check-circle text-emerald"></i> Verified
+                                        </span>
+                                        {% endif %}
+                                        {% if ngo.distance is not None %}
+                                        <span class="distance-badge ms-lg-1">
+                                            <i class="fas fa-location-arrow"></i> {{ ngo.distance }} km away
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- NGO Bio / Mission Statement -->
+                                    <p class="small text-muted mb-3" style="line-height: 1.5;">
+                                        {{ ngo.profile.bio|default:"No description or mission statement provided by this organization." }}
+                                    </p>
+
+                                    <!-- Capabilities & Specs -->
+                                    <div class="d-flex flex-wrap align-items-center gap-3 border-top pt-2">
+                                        <div class="d-flex gap-1.5">
+                                            <span class="capability-tag {% if ngo.profile.has_fridge %}active{% endif %}">
+                                                <i class="fas fa-snowflake"></i> Fridge
+                                            </span>
+                                            <span class="capability-tag {% if ngo.profile.has_freezer %}active{% endif %}">
+                                                <i class="fas fa-icicles"></i> Freezer
+                                            </span>
+                                            <span class="capability-tag {% if ngo.profile.has_warmers %}active{% endif %}">
+                                                <i class="fas fa-fire"></i> Warmer
+                                            </span>
+                                        </div>
+                                        <span class="border-start ps-3 small text-muted">
+                                            Max Capacity: <strong class="text-dark">{{ ngo.profile.max_capacity }} servings</strong>
+                                        </span>
+                                        <span class="border-start ps-3 small text-muted">
+                                            Vehicle Transport: <strong class="text-dark">{{ ngo.profile.vehicle_capacity }} portions</strong>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Right Buttons Block -->
+                                <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                                    <div class="d-flex justify-content-lg-end gap-2 flex-wrap">
+                                        <a href="{% url 'chat:chat' user_id=ngo.profile.user.id %}" class="btn btn-chat-ngo px-3 flex-grow-1 flex-lg-grow-0">
+                                            <i class="far fa-comments"></i> Contact NGO
+                                        </a>
+                                        <button type="button" class="btn btn-allocate px-3 flex-grow-1 flex-lg-grow-0" onclick="triggerOfferModal('{{ ngo.profile.user.id }}', '{{ ngo.profile.user.username }}')">
+                                            <i class="fas fa-share-square"></i> Offer Food
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="card p-5 text-center border-0 filter-card">
+                        <i class="fas fa-users-slash fa-3x mb-3 text-light"></i>
+                        <h5 class="fw-bold text-dark">No Community Centers Found</h5>
+                        <p class="text-muted small mb-0">Try adjusting your filters or search query terms.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Offer Food Modal Form -->
+<div class="modal fade" id="offerModal" tabindex="-1" aria-labelledby="offerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="offerModalLabel">Allocate Food Directly</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="allocateForm" method="post" action="{% url 'donor:allocate_food' %}">
+                {% csrf_token %}
+                <div class="modal-body py-4">
+                    <!-- Hidden recipient user ID input -->
+                    <input type="hidden" name="receiver_id" id="modalReceiverId">
+                    
+                    <div class="alert alert-success border-0 bg-emerald-light text-emerald-dark p-3 rounded-3 mb-4" style="font-size:0.75rem;">
+                        <i class="fas fa-handshake me-1"></i> Offering food to: <strong id="modalReceiverName"></strong>
+                    </div>
+
+                    {% if available_listings %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Select Surplus Listing</label>
+                            <select class="form-select" name="food_id" required>
+                                <option value="" disabled selected>Select a listing...</option>
+                                {% for food in available_listings %}
+                                <option value="{{ food.id }}">{{ food.food_name }} ({{ food.quantity }} portions)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Pickup Time Limit</label>
+                            <input type="datetime-local" class="form-control" name="pickup_time" required>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3 text-muted small">
+                        <i class="fas fa-info-circle mb-2"></i>
+                        <p class="mb-0">You have no active available listings to allocate.</p>
+                        <a href="{% url 'donor:add_food' %}" class="btn btn-sm btn-emerald mt-3 text-white text-decoration-none">List Surplus Food First</a>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                    {% if available_listings %}
+                    <button type="submit" class="btn btn-sm btn-success px-4" style="background-color: var(--brand-emerald-dark); border: none;">Confirm Offer</button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Broadcast Alert Modal -->
+<div class="modal fade" id="broadcastModal" tabindex="-1" aria-labelledby="broadcastModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="broadcastModalLabel">Broadcast Urgent Food Alert</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="broadcastForm" method="post" action="{% url 'donor:broadcast_alert' %}">
+                {% csrf_token %}
+                <div class="modal-body py-4">
+                    
+                    <div class="alert alert-danger border-0 bg-danger-light text-danger p-3 rounded-3 mb-4" style="font-size:0.75rem; background-color:#fee2e2; color:#b91c1c;">
+                        <i class="fas fa-exclamation-triangle me-1"></i> This will send an **instant high-priority alert notification** to all NGO accounts located within a **3km radius** of your coordinates.
+                    </div>
+
+                    {% if available_listings %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Select Surplus Listing to Broadcast</label>
+                            <select class="form-select" name="food_id" required>
+                                <option value="" disabled selected>Select a listing...</option>
+                                {% for food in available_listings %}
+                                <option value="{{ food.id }}">{{ food.food_name }} ({{ food.quantity }} portions)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3 text-muted small">
+                        <i class="fas fa-info-circle mb-2"></i>
+                        <p class="mb-0">You have no active available listings to broadcast.</p>
+                        <a href="{% url 'donor:add_food' %}" class="btn btn-sm btn-emerald mt-3 text-white text-decoration-none">List Surplus Food First</a>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                    {% if available_listings %}
+                    <button type="submit" class="btn btn-sm btn-danger px-4" style="background-color: #dc2626; border: none;">Send Broadcast</button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let offerModal = null;
+
+    function triggerOfferModal(receiverId, receiverName) {
+        if (!offerModal) {
+            offerModal = new bootstrap.Modal(document.getElementById('offerModal'));
+        }
+        
+        document.getElementById('modalReceiverId').value = receiverId;
+        document.getElementById('modalReceiverName').textContent = receiverName;
+        
+        // Auto-populate pickup time to 2 hours from now
+        const now = new Date();
+        now.setHours(now.getHours() + 2);
+        const formatDateTime = now.toISOString().slice(0, 16);
+        const timeInput = document.querySelector('#offerModal input[type="datetime-local"]');
+        if (timeInput) {
+            timeInput.value = formatDateTime;
+        }
+
+        offerModal.show();
+    }
+</script>
+{% endblock %}

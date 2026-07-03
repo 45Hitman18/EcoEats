@@ -1,0 +1,406 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Track Request | {{ request.food_listing.food_name }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --slate-bg: #f8fafc;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+    }
+
+    .dashboard-wrapper {
+        background-color: var(--slate-bg);
+        min-height: 100vh;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    /* Professional Timeline Container */
+    .modern-timeline {
+        position: relative;
+        padding: 1rem 0;
+    }
+
+    .timeline-block {
+        position: relative;
+        padding-left: 3.5rem;
+        padding-bottom: 3rem;
+    }
+
+    /* Vertical Line */
+    .timeline-block::before {
+        content: "";
+        position: absolute;
+        left: 1rem;
+        top: 2rem;
+        bottom: 0;
+        width: 2px;
+        background: #e2e8f0;
+        z-index: 1;
+    }
+
+    .timeline-block.completed::before { background: var(--brand-emerald); }
+    .timeline-block:last-child::before { display: none; }
+
+    /* Timeline Icons/Markers */
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        transition: all 0.3s ease;
+        color: #94a3b8;
+    }
+
+    .completed .timeline-marker {
+        background: var(--brand-emerald);
+        border-color: var(--brand-emerald);
+        color: white;
+    }
+
+    .active .timeline-marker {
+        background: white;
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald);
+        box-shadow: 0 0 0 4px var(--brand-emerald-light);
+    }
+
+    /* Pulsing Animation for Active Step */
+    @keyframes marker-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .pulse-marker { animation: marker-pulse 2s infinite; }
+
+    /* Sidebar Status Card */
+    .status-highlight-card {
+        border-radius: 1.25rem;
+        background: white;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .status-banner {
+        padding: 0.75rem;
+        text-align: center;
+        font-weight: 800;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    /* Logistics Info Styling */
+    .manifest-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .manifest-item:last-child { border-bottom: none; }
+
+    .btn-verify {
+        background: var(--brand-emerald);
+        color: white;
+        font-weight: 700;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        transition: all 0.3s;
+        border: none;
+    }
+
+    .btn-verify:hover {
+        background: var(--brand-emerald-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+    }
+
+    .extra-small { font-size: 0.7rem; }
+
+    /* Sidebar Card Consistency */
+    .sidebar-card {
+        height: 160px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-card .card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+
+    /* Status Card Specific */
+    .status-highlight-card {
+        height: 140px;
+    }
+
+    .status-highlight-card .card-body {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+
+    /* Logistics Manifest Card */
+    .logistics-card {
+        height: 200px;
+    }
+
+    .logistics-card .card-body {
+        padding: 1.5rem;
+    }
+
+    /* Action Card Specific */
+    .action-card {
+        height: 160px;
+    }
+
+    .action-card .card-body {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+
+    /* Donor Card Specific */
+    .donor-card {
+        height: 100px;
+    }
+
+    .donor-card .card-body {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+    }
+</style>
+
+<div class="dashboard-wrapper py-5">
+    <div class="container-fluid px-md-5">
+        
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb extra-small fw-bold text-uppercase mb-2">
+                        <li class="breadcrumb-item"><a href="{% url 'receiver:dashboard' %}" class="text-muted text-decoration-none">Marketplace</a></li>
+                        <li class="breadcrumb-item active text-emerald">Tracking</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold text-dark mb-0">
+                    <i class="fas fa-satellite-dish text-emerald me-2"></i>Live Progress Tracker
+                </h1>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <span class="badge bg-white border text-muted px-4 py-2 rounded-pill fw-bold shadow-sm">
+                    TICKET: #REQ-{{ request.id|add:"7000" }}
+                </span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm" style="border-radius: 1.5rem;">
+                    <div class="card-body p-4 p-md-5">
+                        <h6 class="text-muted fw-bold text-uppercase extra-small mb-5" style="letter-spacing: 0.1em;">Redistribution Lifecycle</h6>
+                        
+                        <div class="modern-timeline">
+                            <div class="timeline-block completed">
+                                <div class="timeline-marker"><i class="fas fa-paper-plane small"></i></div>
+                                <div class="timeline-info">
+                                    <h6 class="fw-bold text-dark mb-1">Request Dispatched</h6>
+                                    <p class="small text-muted mb-2">The redistribution inquiry for <strong>{{ request.food_listing.food_name }}</strong> was successfully sent to the donor.</p>
+                                    <span class="badge bg-light text-muted extra-small fw-bold">{{ request.requested_at|date:"M d, H:i" }}</span>
+                                </div>
+                            </div>
+
+                            {% if request.status == 'rejected' %}
+                                <div class="timeline-block">
+                                    <div class="timeline-marker bg-danger border-danger text-white"><i class="fas fa-times"></i></div>
+                                    <div class="timeline-info">
+                                        <h6 class="fw-bold text-danger mb-1">Request Declined</h6>
+                                        <p class="small text-muted mb-0">The donor has declined this redistribution request.</p>
+                                    </div>
+                                </div>
+                            {% elif request.status == 'pending' %}
+                                <div class="timeline-block active">
+                                    <div class="timeline-marker pulse-marker"><i class="fas fa-user-shield small"></i></div>
+                                    <div class="timeline-info">
+                                        <h6 class="fw-bold text-dark mb-1">Awaiting Verification</h6>
+                                        <p class="small text-muted">The donor is currently reviewing your organization's pickup proposal.</p>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="timeline-block completed">
+                                    <div class="timeline-marker"><i class="fas fa-check small"></i></div>
+                                    <div class="timeline-info">
+                                        <h6 class="fw-bold text-dark mb-1">Logistics Approved</h6>
+                                        <p class="small text-muted mb-2">The donor has confirmed the pickup window and resources.</p>
+                                        <span class="badge bg-light text-muted extra-small fw-bold">{{ request.approved_at|date:"M d, H:i" }}</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if request.status == 'picked' or request.status == 'completed' %}
+                                <div class="timeline-block completed">
+                                    <div class="timeline-marker"><i class="fas fa-truck-loading small"></i></div>
+                                    <div class="timeline-info">
+                                        <h6 class="fw-bold text-dark mb-1">Collection Verified</h6>
+                                        <p class="small text-muted mb-2">Surplus has been successfully retrieved from the donor site.</p>
+                                        <span class="badge bg-light text-muted extra-small fw-bold">{{ request.picked_at|date:"M d, H:i" }}</span>
+                                    </div>
+                                </div>
+                            {% elif request.status == 'approved' %}
+                                <div class="timeline-block active">
+                                    <div class="timeline-marker pulse-marker"><i class="fas fa-map-marker-alt small"></i></div>
+                                    <div class="timeline-info">
+                                        <h6 class="fw-bold text-dark mb-1">Staged for Retrieval</h6>
+                                        <p class="small text-muted">Items are prepared and waiting at the hub. Please arrive by <span class="text-emerald fw-bold">{{ request.pickup_time|date:"H:i" }}</span>.</p>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="timeline-block">
+                                    <div class="timeline-marker"><i class="fas fa-truck small"></i></div>
+                                    <div class="timeline-info"><h6 class="fw-bold text-muted opacity-50 mb-0">Transit & Pickup</h6></div>
+                                </div>
+                            {% endif %}
+
+                            {% if request.status == 'completed' %}
+                                <div class="timeline-block completed">
+                                    <div class="timeline-marker"><i class="fas fa-heart small"></i></div>
+                                    <div class="timeline-info">
+                                        <h6 class="fw-bold text-dark mb-1">Impact Achieved</h6>
+                                        <p class="small text-muted mb-0">Redistribution finalized. This transaction has been logged for sustainability reporting.</p>
+                                    </div>
+                                </div>
+                            {% elif request.status == 'picked' %}
+                                <div class="timeline-block active">
+                                    <div class="timeline-marker pulse-marker"><i class="fas fa-star small"></i></div>
+                                    <div class="timeline-info">
+                                        <h6 class="fw-bold text-dark mb-1">Redistribution in Progress</h6>
+                                        <p class="small text-muted">Food is in transit to beneficiaries. Mark as "Finalized" once delivered.</p>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="timeline-block">
+                                    <div class="timeline-marker"><i class="fas fa-flag-checkered small"></i></div>
+                                    <div class="timeline-info"><h6 class="fw-bold text-muted opacity-50 mb-0">Goal Finalized</h6></div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Status Card -->
+                <div class="status-highlight-card shadow-sm mb-4">
+                    <div class="status-banner
+                        {% if request.status == 'pending' %}bg-warning text-dark
+                        {% elif request.status == 'approved' %}bg-emerald text-white
+                        {% elif request.status == 'completed' %}bg-primary text-white
+                        {% else %}bg-secondary text-white{% endif %}">
+                        Current Milestone: {{ request.get_status_display }}
+                    </div>
+                    <div class="card-body text-center">
+                        {% if request.status == 'approved' or request.status == 'picked' or request.status == 'completed' %}
+                            <div class="extra-small fw-bold text-muted text-uppercase mb-1">Target Arrival</div>
+                            <div class="h4 fw-bold text-dark">{{ request.pickup_time|date:"H:i" }}</div>
+                            <div class="small text-muted">{{ request.pickup_time|date:"F d, Y" }}</div>
+                        {% else %}
+                            <div class="extra-small fw-bold text-muted text-uppercase mb-1">Status</div>
+                            <div class="h4 fw-bold text-dark">{{ request.get_status_display }}</div>
+                            <div class="small text-muted">Awaiting approval</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Logistics Manifest Card -->
+                <div class="card border-0 shadow-sm mb-4 logistics-card" style="border-radius: 1.25rem;">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-uppercase extra-small text-muted mb-4" style="letter-spacing: 0.1em;">Logistics Manifest</h6>
+
+                        <div class="manifest-item">
+                            <div class="extra-small text-muted text-uppercase fw-bold mb-1">Donor Hub</div>
+                            <div class="small fw-bold text-dark">{{ request.food_listing.pickup_location }}</div>
+                        </div>
+                        <div class="manifest-item">
+                            <div class="extra-small text-muted text-uppercase fw-bold mb-1">Redistribution Lead</div>
+                            <div class="small fw-bold text-dark">{{ request.contact_person|default:"Assigned Team" }}</div>
+                        </div>
+                        <div class="manifest-item">
+                            <div class="extra-small text-muted text-uppercase fw-bold mb-1">Surplus Inventory</div>
+                            <div class="small fw-bold text-emerald">{{ request.food_listing.food_name }} ({{ request.food_listing.quantity }})</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button Card (Conditional) -->
+                {% if request.status == 'approved' %}
+                <div class="card border-0 shadow-lg mb-4 action-card" style="border-radius: 1.25rem; border-top: 4px solid var(--brand-emerald) !important;">
+                    <div class="card-body text-center">
+                        <p class="small text-muted mb-4">Are you currently at the donor hub to retrieve the surplus?</p>
+                        <form method="post" action="{% url 'receiver:mark_picked' request.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-verify w-100 shadow-sm">
+                                <i class="fas fa-qrcode me-2"></i>VERIFY COLLECTION
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% elif request.status == 'picked' %}
+                <div class="card border-0 shadow-lg mb-4 action-card" style="border-radius: 1.25rem; border-top: 4px solid #3b82f6 !important;">
+                    <div class="card-body text-center">
+                        <p class="small text-muted mb-4">Has the surplus reached the community beneficiaries?</p>
+                        <form method="post" action="{% url 'receiver:mark_completed' request.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-verify w-100 shadow-sm" style="background-color: #3b82f6;">
+                                <i class="fas fa-check-double me-2"></i>FINALIZE IMPACT
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Placeholder card to maintain consistent layout -->
+                <div class="card border-0 shadow-sm mb-4 action-card" style="border-radius: 1.25rem; background-color: #f8fafc; border: 1px dashed #e2e8f0;">
+                    <div class="card-body text-center">
+                        <div class="text-muted">
+                            <i class="fas fa-clock fa-2x mb-3 opacity-50"></i>
+                            <p class="small mb-0">Action required once approved</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Donor Information Card -->
+                <div class="card border-0 shadow-sm donor-card" style="border-radius: 1.25rem;">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="bg-emerald-light text-emerald rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                            <i class="fas fa-building small"></i>
+                        </div>
+                        <div>
+                            <div class="extra-small text-muted text-uppercase fw-bold">Verified Donor</div>
+                            <div class="small fw-bold text-dark">{{ request.food_listing.donor.username }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

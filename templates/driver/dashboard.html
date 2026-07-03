@@ -1,0 +1,961 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Logistics Dispatch Center | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --text-slate: #0f172a;
+        --text-muted: #64748b;
+        --border-color: #f1f5f9;
+        --slate-bg: #f8fafc;
+        --blue-accent: #0284c7;
+        --blue-accent-light: #f0f9ff;
+        --amber-accent: #d97706;
+        --amber-accent-light: #fef3c7;
+    }
+
+    .driver-dashboard-section {
+        background: radial-gradient(circle at 10% 20%, rgba(243, 244, 246, 0.4) 0%, rgba(248, 250, 252, 1) 90.7%);
+        min-height: 92vh;
+        padding: 2.5rem 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* KPI metric cards */
+    .driver-stat-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 20px;
+        padding: 1.5rem 1.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        height: 100%;
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .driver-stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .stat-runs::before { background: var(--blue-accent); }
+    .stat-weight::before { background: var(--brand-emerald); }
+    .stat-co2::before { background: var(--amber-accent); }
+
+    .driver-stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08);
+    }
+
+    .driver-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        flex-shrink: 0;
+        box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    }
+
+    .bg-gradient-runs { background: var(--blue-accent-light); color: var(--blue-accent); }
+    .bg-gradient-weight { background: #f0fdf4; color: var(--brand-emerald-dark); }
+    .bg-gradient-co2 { background: var(--amber-accent-light); color: var(--amber-accent); }
+
+    /* Layout panels */
+    .dashboard-panel-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(241, 245, 249, 0.8);
+        border-radius: 24px;
+        box-shadow: 0 10px 30px -15px rgba(15, 23, 42, 0.05);
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+    }
+
+    .panel-header-bar {
+        padding: 1.25rem 1.5rem;
+        background-color: transparent;
+        border-bottom: 1.5px solid rgba(241, 245, 249, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+
+    .panel-header-bar h5 {
+        color: var(--text-slate);
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        margin: 0;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        letter-spacing: -0.01em;
+    }
+
+    .panel-body-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+
+    /* Available package ticket cards */
+    .job-card {
+        background: #ffffff;
+        border: 1.5px solid rgba(241, 245, 249, 0.8);
+        border-radius: 16px;
+        padding: 1.25rem;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 1.25rem;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.01);
+    }
+
+    .job-card:last-child {
+        margin-bottom: 0;
+    }
+
+    .job-card:hover {
+        border-color: rgba(16, 185, 129, 0.3);
+        box-shadow: 0 12px 25px -10px rgba(16, 185, 129, 0.12);
+        transform: translateY(-2px);
+    }
+
+    /* Active Job styling */
+    #deliveryMap {
+        height: 250px;
+        border-radius: 16px;
+        border: 2px solid rgba(241, 245, 249, 0.8);
+        margin-bottom: 1.5rem;
+        z-index: 1;
+        width: 100%;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.02);
+    }
+
+    .route-node {
+        position: relative;
+        padding-left: 2.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .route-node::before {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 20px;
+        bottom: -20px;
+        width: 2px;
+        border-left: 2px dashed #cbd5e1;
+    }
+
+    .route-node:last-child::before {
+        display: none;
+    }
+
+    .route-dot {
+        position: absolute;
+        left: 0;
+        top: 4px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: #ffffff;
+        border: 4px solid var(--brand-emerald);
+        z-index: 2;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+    }
+
+    .route-dot.destination {
+        border-color: var(--blue-accent);
+        box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.15);
+    }
+
+    /* Guideline Section */
+    .guide-item {
+        display: flex;
+        gap: 1.25rem;
+        padding: 1.25rem;
+        border-radius: 16px;
+        background-color: rgba(248, 250, 252, 0.6);
+        border: 1px solid rgba(241, 245, 249, 0.8);
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+    .guide-item:hover {
+        background-color: #ffffff;
+        border-color: rgba(16, 185, 129, 0.25);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+    }
+    .guide-icon {
+        font-size: 1.25rem;
+        color: var(--brand-emerald-dark);
+        margin-top: 0.1rem;
+        background: var(--brand-emerald-light);
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* Layout column wrapper height normalization */
+    .dash-column-wrapper {
+        min-height: 540px;
+    }
+
+    .pulse-green-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #34d399;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+        animation: dotPulse 1.6s infinite;
+    }
+    @keyframes dotPulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+        }
+    }
+</style>
+
+<div class="driver-dashboard-section">
+    <div class="container">
+        
+        <!-- Dashboard Header -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb extra-small fw-bold text-uppercase mb-1" style="letter-spacing: 0.05em; font-size: 0.7rem;">
+                        <li class="breadcrumb-item"><span class="text-muted">EcoEats</span></li>
+                        <li class="breadcrumb-item active text-emerald">Logistics Hub</li>
+                    </ol>
+                </nav>
+                <h2 class="fw-extrabold text-dark mb-0" style="font-family:'Outfit', sans-serif; font-size:1.7rem; letter-spacing: -0.02em;">Logistics Dispatch Center</h2>
+                <p class="text-muted small mb-0 mt-1">Manage active logistics worksheets, claim available runs, and track coordinate routing.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="d-inline-flex align-items-center bg-white border px-3 py-2 rounded-pill fw-bold text-dark shadow-sm" style="font-size: 0.72rem;">
+                    <span class="pulse-green-dot me-2"></span> System Online
+                </span>
+                <span class="badge bg-emerald-light text-emerald border px-3 py-2 rounded-pill fw-bold" style="font-size:0.7rem; color: var(--brand-emerald-dark) !important; border-color: rgba(16, 185, 129, 0.2) !important;">
+                    <i class="fas fa-shield-halved me-1"></i> Verified Partner
+                </span>
+            </div>
+        </div>
+
+        <!-- 3 KPI Metric Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card driver-stat-card stat-runs border-0">
+                    <div class="driver-icon-box bg-gradient-runs"><i class="fas fa-truck-loading"></i></div>
+                    <div>
+                        <span class="d-block text-muted fw-bold extra-small text-uppercase mb-0.5" style="font-size:0.65rem; letter-spacing:0.05em;">Completed Runs</span>
+                        <h4 class="fw-extrabold text-dark mb-0" style="font-family:'Outfit', sans-serif; font-size: 1.55rem; letter-spacing:-0.01em;">{{ completed_runs_count }}</h4>
+                        <span class="text-muted extra-small" style="font-size:0.7rem;">successful rescue deliveries</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card driver-stat-card stat-weight border-0">
+                    <div class="driver-icon-box bg-gradient-weight"><i class="fas fa-scale-balanced"></i></div>
+                    <div>
+                        <span class="d-block text-muted fw-bold extra-small text-uppercase mb-0.5" style="font-size:0.65rem; letter-spacing:0.05em;">Total Weight Transported</span>
+                        <h4 class="fw-extrabold text-dark mb-0" style="font-family:'Outfit', sans-serif; font-size: 1.55rem; letter-spacing:-0.01em;">{{ total_weight_transported }} kg</h4>
+                        <span class="text-muted extra-small" style="font-size:0.7rem;">delivered to local shelters</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card driver-stat-card stat-co2 border-0">
+                    <div class="driver-icon-box bg-gradient-co2"><i class="fas fa-cloud-sun"></i></div>
+                    <div>
+                        <span class="d-block text-muted fw-bold extra-small text-uppercase mb-0.5" style="font-size:0.65rem; letter-spacing:0.05em;">CO2 Emissions Prevented</span>
+                        <h4 class="fw-extrabold text-dark mb-0" style="font-family:'Outfit', sans-serif; font-size: 1.55rem; letter-spacing:-0.01em;">{{ co2_saved }} kg</h4>
+                        <span class="text-muted extra-small" style="font-size:0.7rem;">saved from landfill waste</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direct Delivery Requests (Glowing Card Alert) -->
+        {% if direct_requests %}
+        <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #fffbeb 0%, #fffbeb 100%); border-left: 5px solid var(--amber-accent) !important; border-radius: 16px; overflow:hidden;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="spinner-grow text-warning spinner-grow-sm" role="status"></span>
+                    <h5 class="fw-extrabold text-dark mb-0" style="font-family:'Outfit', sans-serif; font-size:1rem; letter-spacing:0.01em;"><i class="fas fa-hand-point-right me-1.5 text-warning"></i> Direct Delivery Requests From Donors</h5>
+                </div>
+                <div class="row g-3">
+                    {% for req in direct_requests %}
+                        <div class="col-md-6">
+                            <div class="bg-white border rounded-4 p-3.5 h-100 shadow-sm d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h6 class="fw-extrabold text-dark mb-0" style="font-family:'Outfit', sans-serif; font-size:0.9rem;">{{ req.food_listing.food_name }}</h6>
+                                        <span class="badge bg-warning text-dark extra-small fw-bold" style="font-size:0.65rem; padding:0.25rem 0.6rem; border-radius:6px;">Direct Request</span>
+                                    </div>
+                                    <div class="position-relative ps-4 py-1 mb-3">
+                                        <div style="position: absolute; left: 6px; top: 12px; bottom: 12px; border-left: 2px dashed #cbd5e1; width: 0;"></div>
+                                        <div class="mb-2">
+                                            <span style="position: absolute; left: 1px; top: 8px; width: 12px; height: 12px; border-radius: 50%; background-color: #ef4444; border: 3px solid #fee2e2;"></span>
+                                            <span class="text-muted extra-small text-uppercase fw-bold d-block" style="font-size:0.6rem; letter-spacing:0.05em;">Pickup</span>
+                                            <span class="fw-bold text-dark" style="font-size:0.78rem;">{{ req.food_listing.donor.username }}</span>
+                                            <p class="text-muted extra-small mb-0" style="font-size:0.7rem;">{{ req.food_listing.pickup_location }}</p>
+                                        </div>
+                                        <div>
+                                            <span style="position: absolute; left: 1px; bottom: 8px; width: 12px; height: 12px; border-radius: 50%; background-color: #3b82f6; border: 3px solid #dbeafe;"></span>
+                                            <span class="text-muted extra-small text-uppercase fw-bold d-block" style="font-size:0.6rem; letter-spacing:0.05em;">Deliver</span>
+                                            <span class="fw-bold text-dark" style="font-size:0.78rem;">{{ req.requester.username }}</span>
+                                            <p class="text-muted extra-small mb-0" style="font-size:0.7rem;">{{ req.requester.profile.location }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 border-top pt-3">
+                                    <a href="{% url 'driver:accept_direct_request' req.id %}" class="btn btn-sm btn-success w-50 py-2 fw-bold rounded-3 border-0 text-white" style="background-color: var(--brand-emerald-dark); font-size:0.75rem;">
+                                        <i class="fas fa-check me-1"></i> Accept Request
+                                    </a>
+                                    <a href="{% url 'driver:decline_direct_request' req.id %}" class="btn btn-sm btn-outline-danger w-50 py-2 fw-bold rounded-3" style="font-size:0.75rem;">
+                                        <i class="fas fa-times me-1"></i> Decline
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Two Column Main Workspace -->
+        <div class="row g-4 align-items-stretch">
+            
+            <!-- Left Workspace: Active Job Worksheet or Driver Safety & Guide -->
+            <div class="col-lg-6 dash-column-wrapper">
+                <div class="card dashboard-panel-card border-0">
+                    {% if active_delivery %}
+                        <div class="panel-header-bar">
+                            <h5><i class="fas fa-map-location-dot text-emerald"></i> Active Job Route Worksheet</h5>
+                            <span class="badge bg-warning text-dark rounded-pill fw-bold text-uppercase" style="font-size:0.65rem; padding: 0.35rem 0.75rem;">
+                                {% if active_delivery.delivery_status == 'accepted' %}Heading to Pickup{% else %}In Transit{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="panel-body-scroll">
+                            <!-- Map container -->
+                            <div id="deliveryMap" style="margin-bottom: 1.5rem;"></div>
+
+                            <!-- Route Nodes -->
+                            <div class="position-relative ps-4.5 py-1 mb-4">
+                                <!-- Vertical connection path line -->
+                                <div style="position: absolute; left: 8px; top: 12px; bottom: 12px; border-left: 2px dashed #cbd5e1; width: 0;"></div>
+
+                                <div class="mb-4">
+                                    <span style="position: absolute; left: 2px; top: 8px; width: 14px; height: 14px; border-radius: 50%; background-color: #ef4444; border: 4px solid #fee2e2; box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);"></span>
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <span class="text-muted extra-small text-uppercase fw-bold d-block" style="font-size:0.6rem; letter-spacing:0.05em;">Pickup Location (Donor)</span>
+                                            <h6 class="fw-bold text-dark mb-0.5 mt-1" style="font-size: 0.85rem;">{{ active_delivery.food_listing.donor.username }}</h6>
+                                            <p class="text-muted extra-small mb-0" style="line-height:1.4;"><i class="fas fa-location-dot me-1 text-danger"></i> {{ active_delivery.food_listing.pickup_location }}</p>
+                                        </div>
+                                        <a href="{% url 'chat:chat' active_delivery.food_listing.donor.id %}" class="btn btn-sm btn-outline-emerald border rounded-3 px-3 py-1.5 fw-bold" style="font-size:0.7rem; border-radius: 8px; background: #ffffff;">
+                                            <i class="fas fa-comment me-1"></i> Chat
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span style="position: absolute; left: 2px; bottom: 8px; width: 14px; height: 14px; border-radius: 50%; background-color: #3b82f6; border: 4px solid #dbeafe; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);"></span>
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <span class="text-muted extra-small text-uppercase fw-bold d-block" style="font-size:0.6rem; letter-spacing:0.05em;">Drop-off Destination (NGO)</span>
+                                            <h6 class="fw-bold text-dark mb-0.5 mt-1" style="font-size: 0.85rem;">{{ active_delivery.requester.username }}</h6>
+                                            <p class="text-muted extra-small mb-0" style="line-height:1.4;"><i class="fas fa-location-dot me-1 text-primary"></i> {{ active_delivery.requester.profile.location }}</p>
+                                        </div>
+                                        <a href="{% url 'chat:chat' active_delivery.requester.id %}" class="btn btn-sm btn-outline-primary border rounded-3 px-3 py-1.5 fw-bold" style="font-size:0.7rem; border-radius: 8px; background: #ffffff;">
+                                            <i class="fas fa-comment me-1"></i> Chat
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Food Description Info -->
+                            <div class="card border-0 p-3 mb-3.5" style="background: rgba(248, 250, 252, 0.85); border-radius: 16px;">
+                                <span class="text-muted extra-small text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.05em;">Assigned Cargo Details</span>
+                                <div class="d-flex align-items-center justify-content-between mt-2">
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <div style="width:36px; height:36px; background-color: var(--brand-emerald-light); border-radius:10px; display:flex; align-items:center; justify-content:center; color: var(--brand-emerald-dark);">
+                                            <i class="fas fa-box-open" style="font-size:1.05rem;"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-extrabold text-dark mb-0" style="font-family:'Outfit', sans-serif; font-size:0.95rem;">{{ active_delivery.food_listing.food_name }}</h6>
+                                            <span class="badge bg-white text-muted border fw-bold mt-1" style="font-size:0.62rem; padding: 0.15rem 0.4rem;">{{ active_delivery.food_listing.food_type }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="d-block fw-extrabold text-emerald" style="font-size:1.15rem; font-family:'Outfit', sans-serif; letter-spacing:-0.02em;">{{ active_delivery.food_listing.quantity }} kg</span>
+                                        <span class="text-muted extra-small" style="font-size:0.65rem;">rescue volume</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- State progression & navigation buttons -->
+                            <div class="d-flex flex-column gap-2 mt-4">
+                                <button type="button" id="launchNavigator" class="btn w-100 py-2.5 fw-bold text-white border-0 transition-all shadow-sm" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); font-size:0.8rem; border-radius: 12px !important; letter-spacing: 0.01em; cursor:pointer;">
+                                    <i class="fas fa-location-arrow me-1.5 animate-pulse"></i> Launch Live Fullscreen Navigator
+                                </button>
+
+                                <form method="post" action="{% url 'driver:update_status' active_delivery.id %}" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    {% if active_delivery.delivery_status == 'accepted' %}
+                                        <input type="hidden" name="status" value="picked_up">
+                                        <button type="submit" class="btn btn-emerald w-100 py-2.5 rounded-3 fw-bold text-white border-0 shadow-sm transition-all" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-size:0.8rem; border-radius:12px !important;">
+                                            <i class="fas fa-truck-pickup me-1.5"></i> Confirm Pickup Handover
+                                        </button>
+                                    {% elif active_delivery.delivery_status == 'picked_up' %}
+                                        <input type="hidden" name="status" value="delivered">
+                                        <div class="mb-3.5 card border-0 p-3" style="background: rgba(248, 250, 252, 0.6); border-radius: 12px;">
+                                            <label class="form-label text-muted extra-small fw-bold text-uppercase mb-2" style="font-size:0.62rem; letter-spacing:0.05em;">Upload Delivery Proof Photo</label>
+                                            <input type="file" name="delivery_photo" class="form-control rounded-3" style="font-size:0.75rem; background:#ffffff;" required accept="image/*">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold text-white border-0 shadow-sm transition-all" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); font-size:0.8rem; border-radius:12px !important;">
+                                            <i class="fas fa-circle-check me-1.5"></i> Complete Drop-off Handover
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Redesigned Guide Column (Fills the space when no active job is accepted) -->
+                        <div class="panel-header-bar">
+                            <h5><i class="fas fa-shield-halved text-emerald"></i> Driver Safety & Compliance Guidelines</h5>
+                        </div>
+                        <div class="panel-body-scroll">
+                            <div class="alert border-0 bg-gradient-runs text-dark p-3 rounded-4 mb-4" style="font-size:0.78rem; line-height:1.45; border-left: 4px solid var(--blue-accent) !important;">
+                                <i class="fas fa-info-circle me-1.5 text-primary"></i> <strong>Logistics Status:</strong> You are currently off-duty. Select an active food request from the board on the right to start a redirection run.
+                            </div>
+
+                            <div class="guide-item">
+                                <div class="guide-icon"><i class="fas fa-temperature-arrow-down"></i></div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1" style="font-size:0.85rem; font-family:'Outfit', sans-serif;">Thermal Maintenance</h6>
+                                    <p class="text-muted extra-small mb-0" style="line-height:1.45;">Maintain strict storage controls. Ensure warm cooked items are moved in insulated bags, and cold perishables are shielded from direct sunlight during transit.</p>
+                                </div>
+                            </div>
+
+                            <div class="guide-item">
+                                <div class="guide-icon"><i class="fas fa-clock"></i></div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1" style="font-size:0.85rem; font-family:'Outfit', sans-serif;">Express Transit Window</h6>
+                                    <p class="text-muted extra-small mb-0" style="line-height:1.45;">Complete pickups and drops within 45 minutes of claiming the task. Excess delays can compromise food shelf life and safety.</p>
+                                </div>
+                            </div>
+
+                            <div class="guide-item">
+                                <div class="guide-icon"><i class="fas fa-camera"></i></div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1" style="font-size:0.85rem; font-family:'Outfit', sans-serif;">Drop-off Proof Validation</h6>
+                                    <p class="text-muted extra-small mb-0" style="line-height:1.45;">Always upload a clear photograph showing the food items handed over to the NGO supervisor at the shelter to successfully close the claim.</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right Workspace: Available shipments task board -->
+            <div class="col-lg-6 dash-column-wrapper">
+                <div class="card dashboard-panel-card border-0">
+                    <div class="panel-header-bar">
+                        <h5><i class="fas fa-clipboard-list text-emerald"></i> Available Transport Shipments</h5>
+                    </div>
+                    
+                    <div class="panel-body-scroll">
+                        {% if available_jobs %}
+                            {% for job in available_jobs %}
+                                <div class="job-card">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h6 class="fw-extrabold text-dark mb-0" style="font-family:'Outfit', sans-serif; font-size:0.92rem;">{{ job.food_listing.food_name }}</h6>
+                                            <span class="badge bg-emerald-light text-emerald-dark extra-small border rounded-pill mt-1.5" style="font-size:0.62rem; padding: 0.2rem 0.6rem; border-color: rgba(16, 185, 129, 0.2) !important;">{{ job.food_listing.quantity }} kg • {{ job.food_listing.food_type }}</span>
+                                        </div>
+                                        <span class="badge bg-light text-muted border rounded-pill fw-bold" style="font-size:0.62rem; padding: 0.25rem 0.6rem;">Awaiting Driver</span>
+                                    </div>
+                                    
+                                    <div class="position-relative ps-4 py-1 mb-3">
+                                        <div style="position: absolute; left: 6px; top: 12px; bottom: 12px; border-left: 2px dashed #cbd5e1; width: 0;"></div>
+                                        <div class="mb-2.5">
+                                            <span style="position: absolute; left: 1px; top: 8px; width: 12px; height: 12px; border-radius: 50%; background-color: #ef4444; border: 3px solid #fee2e2;"></span>
+                                            <span class="text-muted extra-small text-uppercase fw-bold d-block" style="font-size:0.6rem; letter-spacing:0.05em;">Pickup Source</span>
+                                            <span class="fw-bold text-dark" style="font-size:0.8rem;">{{ job.food_listing.donor.username }}</span>
+                                            <p class="text-muted extra-small mb-0" style="font-size:0.7rem;">{{ job.food_listing.pickup_location }}</p>
+                                        </div>
+                                        <div>
+                                            <span style="position: absolute; left: 1px; bottom: 8px; width: 12px; height: 12px; border-radius: 50%; background-color: #3b82f6; border: 3px solid #dbeafe;"></span>
+                                            <span class="text-muted extra-small text-uppercase fw-bold d-block" style="font-size:0.6rem; letter-spacing:0.05em;">NGO Destination</span>
+                                            <span class="fw-bold text-dark" style="font-size:0.8rem;">{{ job.requester.username }}</span>
+                                            <p class="text-muted extra-small mb-0" style="font-size:0.7rem;">{{ job.requester.profile.location }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 border-top pt-3">
+                                        <a href="{% url 'driver:claim_delivery' job.id %}" class="btn btn-sm btn-emerald w-100 py-2.5 text-white border-0 fw-bold rounded-3 shadow-sm" style="background: var(--brand-emerald-dark); font-size:0.75rem; border-radius: 10px !important;">
+                                            <i class="fas fa-hand-holding-hand me-1"></i> Accept Logistics Pickup Run
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Premium visual stable view -->
+                            <div class="text-center py-4 px-3 mb-4" style="background: rgba(240, 253, 244, 0.5); border: 1.5px solid rgba(16, 185, 129, 0.15); border-radius: 20px;">
+                                <div class="mb-3 text-success d-inline-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm" style="width: 54px; height: 54px; border: 2px solid rgba(16, 185, 129, 0.1);">
+                                    <i class="fas fa-circle-check fa-lg text-emerald"></i>
+                                </div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-family:'Outfit', sans-serif; font-size:0.95rem;">EcoEats Logistics Stable</h6>
+                                <p class="text-muted extra-small mb-0 mx-auto" style="max-width: 280px; line-height: 1.5;">All active surplus claims in the system are currently assigned or self-collected. Great job helping clean up food waste!</p>
+                            </div>
+
+                            <!-- Recently Completed Activity Log (Making it look alive!) -->
+                            <div class="border-top pt-4">
+                                <span class="text-muted extra-small text-uppercase fw-bold d-block mb-3" style="font-size: 0.65rem; letter-spacing: 0.05em; text-align: left;">Logistics Performance Log</span>
+                                
+                                <div class="d-flex align-items-start gap-3 mb-3 pb-3 border-bottom border-light" style="text-align: left;">
+                                    <div class="bg-gradient-runs rounded-circle d-flex align-items-center justify-content-center" style="width:32px; height:32px; flex-shrink:0;">
+                                        <i class="fas fa-circle-notch fa-spin text-primary" style="font-size:0.8rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0.5" style="font-size:0.8rem;">Driver Standby Mode</h6>
+                                        <p class="text-muted extra-small mb-0" style="line-height:1.45;">System is scanning coordinates and listening for new donor listings. Keep this tab open to receive direct requests.</p>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-start gap-3" style="text-align: left;">
+                                    <div class="bg-gradient-weight rounded-circle d-flex align-items-center justify-content-center" style="width:32px; height:32px; flex-shrink:0;">
+                                        <i class="fas fa-star text-success" style="font-size:0.8rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0.5" style="font-size:0.8rem;">Community Impact Level</h6>
+                                        <p class="text-muted extra-small mb-0" style="line-height:1.45;">Your profile statistics represent carbon emission saves and local shelter food security. Track your weekly logs in the top header cards.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Leaflet Map Script Setup -->
+{% if active_delivery %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let donorLat = 0;
+    let donorLng = 0;
+    let ngoLat = 0;
+    let ngoLng = 0;
+
+    try {
+        donorLat = parseFloat("{{ active_delivery.food_listing.latitude|default:0 }}");
+        donorLng = parseFloat("{{ active_delivery.food_listing.longitude|default:0 }}");
+        ngoLat = parseFloat("{{ active_delivery.requester.profile.latitude|default:0 }}");
+        ngoLng = parseFloat("{{ active_delivery.requester.profile.longitude|default:0 }}");
+
+        if (donorLat && donorLng) {
+            const centerLat = ngoLat ? (donorLat + ngoLat) / 2 : donorLat;
+            const centerLng = ngoLng ? (donorLng + ngoLng) / 2 : donorLng;
+            
+            const map = L.map('deliveryMap').setView([centerLat, centerLng], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            if (ngoLat && ngoLng) {
+                // Initialize Leaflet Routing control with OpenStreetMap engine
+                L.Routing.control({
+                    waypoints: [
+                        L.latLng(donorLat, donorLng),
+                        L.latLng(ngoLat, ngoLng)
+                    ],
+                    routeWhileDragging: false,
+                    show: false, // Hides text panel on main worksheet map
+                    addWaypoints: false,
+                    draggableWaypoints: false,
+                    lineOptions: {
+                        styles: [{ color: '#10b981', opacity: 0.85, weight: 6 }]
+                    },
+                    createMarker: function(i, wp, nWps) {
+                        if (i === 0) {
+                            return L.marker(wp.latLng).bindPopup("<strong>Pickup Source</strong><br>{{ active_delivery.food_listing.donor.username }}");
+                        } else {
+                            return L.marker(wp.latLng).bindPopup("<strong>NGO Drop-off Point</strong><br>{{ active_delivery.requester.username }}");
+                        }
+                    }
+                }).addTo(map);
+            } else {
+                L.marker([donorLat, donorLng]).addTo(map)
+                    .bindPopup("<strong>Pickup Source</strong><br>{{ active_delivery.food_listing.donor.username }}")
+                    .openPopup();
+            }
+        }
+    } catch (e) {
+        console.error('Failed to load Leaflet routing map:', e);
+    }
+
+    // Live Navigator Controls
+    const launchBtn = document.getElementById('launchNavigator');
+    const overlay = document.getElementById('fullscreenNavigator');
+    const closeBtn = document.getElementById('closeNavigator');
+    const navStatus = document.getElementById('navStatus');
+    const startNavBtn = document.getElementById('startNavigationBtn');
+    const shareLocBtn = document.getElementById('shareLocationBtn');
+    
+    let watchId = null;
+    let navMap = null;
+    let routingControl = null;
+    let userMarker = null;
+    let lastPosition = null;
+
+    if (launchBtn) {
+        launchBtn.addEventListener('click', function() {
+            overlay.style.display = 'block';
+            
+            // Wait brief moment for overlay to display before drawing map
+            setTimeout(() => {
+                initializeNavigator();
+                if (navMap) {
+                    navMap.invalidateSize();
+                }
+            }, 200);
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            overlay.style.display = 'none';
+            stopLiveTracking();
+            if (navMap) {
+                navMap.remove();
+                navMap = null;
+                routingControl = null;
+                userMarker = null;
+                lastPosition = null;
+            }
+        });
+    }
+
+    // Toggle live guidance tracking
+    if (startNavBtn) {
+        startNavBtn.addEventListener('click', function() {
+            if (watchId === null) {
+                startLiveTracking();
+            } else {
+                stopLiveTracking();
+            }
+        });
+    }
+
+    // Share live coordinates to Donor and NGO chat threads
+    if (shareLocBtn) {
+        shareLocBtn.addEventListener('click', function() {
+            if (!lastPosition) {
+                alert('No active GPS coordinates found. Click Start Guide first.');
+                return;
+            }
+            
+            shareLocBtn.disabled = true;
+            shareLocBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Sharing...`;
+
+            fetch('/chat/send-location/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    donor_id: "{{ active_delivery.food_listing.donor.id }}",
+                    receiver_id: "{{ active_delivery.requester.id }}",
+                    latitude: lastPosition.lat,
+                    longitude: lastPosition.lng
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('📍 Current GPS location shared to Donor & NGO chat logs!');
+                } else {
+                    alert('Failed to share location: ' + data.error);
+                }
+            })
+            .catch(err => {
+                console.error('Error sharing location:', err);
+                alert('Network error while sharing location.');
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    shareLocBtn.disabled = false;
+                    shareLocBtn.innerHTML = `<i class="fas fa-share-nodes text-primary me-1"></i> Share Location`;
+                }, 5000); // 5s debounce protection
+            });
+        });
+    }
+
+    function initializeNavigator() {
+        if (navMap) return;
+
+        // Initialize full map center on donor pickup
+        navMap = L.map('navigatorMap', { zoomControl: false }).setView([donorLat, donorLng], 14);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(navMap);
+
+        navMap.invalidateSize();
+        fallbackRouting(); // Initial overview route connection (static representation)
+    }
+
+    function startLiveTracking() {
+        if (watchId !== null) return;
+
+        navStatus.innerHTML = `<span class="text-primary"><i class="fas fa-circle-notch fa-spin me-1"></i> Connecting GPS...</span>`;
+        
+        if ("geolocation" in navigator) {
+            watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    lastPosition = { lat: lat, lng: lng };
+                    
+                    navStatus.innerHTML = `<span class="text-success fw-bold"><i class="fas fa-circle-check me-1"></i> Live GPS Guidance Active</span>`;
+                    
+                    // Toggle actions state
+                    startNavBtn.innerHTML = `<i class="fas fa-stop me-1"></i> Stop Guide`;
+                    startNavBtn.className = "btn btn-sm btn-danger w-50 py-2 fw-bold text-white rounded-3 border-0";
+                    shareLocBtn.disabled = false;
+
+                    // Update or create user position marker
+                    if (userMarker) {
+                        userMarker.setLatLng([lat, lng]);
+                    } else {
+                        const navIcon = L.divIcon({
+                            className: 'custom-nav-icon',
+                            html: '<div style="background-color:#0284c7; width:16px; height:16px; border:3px solid #ffffff; border-radius:50%; box-shadow:0 0 10px rgba(2,132,199,0.6); animation: pulse 1.8s infinite;"></div>',
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8]
+                        });
+                        userMarker = L.marker([lat, lng], {icon: navIcon}).addTo(navMap)
+                            .bindPopup("<strong>Your Current Position</strong>").openPopup();
+                    }
+
+                    // Recalculate shortest route from current user position
+                    const waypoints = [];
+                    waypoints.push(L.latLng(lat, lng));
+
+                    {% if active_delivery.delivery_status == 'accepted' %}
+                        waypoints.push(L.latLng(donorLat, donorLng));
+                    {% endif %}
+                    
+                    if (ngoLat && ngoLng) {
+                        waypoints.push(L.latLng(ngoLat, ngoLng));
+                    }
+
+                    // Re-route routing machine with live coordinates (hide instruction panels)
+                    if (routingControl) {
+                        routingControl.setWaypoints(waypoints);
+                    } else {
+                        routingControl = L.Routing.control({
+                            waypoints: waypoints,
+                            routeWhileDragging: false,
+                            show: false, // Hides text panel on fullscreen navigator map
+                            addWaypoints: false,
+                            draggableWaypoints: false,
+                            lineOptions: {
+                                styles: [{ color: '#0284c7', opacity: 0.85, weight: 6 }]
+                            },
+                            createMarker: function(i, wp, nWps) {
+                                if (i === 0) {
+                                    return L.marker(wp.latLng, {icon: userMarker.options.icon}).bindPopup("<strong>You</strong>");
+                                } else if (i === 1 && nWps === 3) {
+                                    return L.marker(wp.latLng).bindPopup("<strong>Pickup: {{ active_delivery.food_listing.donor.username }}</strong>");
+                                } else {
+                                    return L.marker(wp.latLng).bindPopup("<strong>NGO: {{ active_delivery.requester.username }}</strong>");
+                                }
+                            }
+                        }).addTo(navMap);
+                    }
+
+                    // recet zoom close on driver position
+                    navMap.setView([lat, lng], 17);
+                },
+                function(error) {
+                    console.error("GPS Watch Position Error:", error);
+                    navStatus.innerHTML = `<span class="text-danger fw-bold"><i class="fas fa-triangle-exclamation me-1"></i> GPS error. Showing fallback routing.</span>`;
+                    stopLiveTracking();
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 5000,
+                    timeout: 20000
+                }
+            );
+        } else {
+            navStatus.innerHTML = `<span class="text-warning fw-bold"><i class="fas fa-triangle-exclamation me-1"></i> Geolocation not supported.</span>`;
+        }
+    }
+
+    function stopLiveTracking() {
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+        
+        // Reset controls state
+        startNavBtn.innerHTML = `<i class="fas fa-play me-1"></i> Start Guide`;
+        startNavBtn.className = "btn btn-sm btn-primary w-50 py-2 fw-bold text-white rounded-3 border-0";
+        startNavBtn.style.backgroundColor = "#0284c7";
+        shareLocBtn.disabled = true;
+        navStatus.innerHTML = `<i class="fas fa-circle text-secondary me-1" style="font-size:0.5rem;"></i> Navigator Idle. Ready to guide.`;
+
+        if (userMarker) {
+            userMarker.remove();
+            userMarker = null;
+        }
+
+        fallbackRouting();
+    }
+
+    function fallbackRouting() {
+        const waypoints = [L.latLng(donorLat, donorLng)];
+        if (ngoLat && ngoLng) {
+            waypoints.push(L.latLng(ngoLat, ngoLng));
+        }
+
+        if (routingControl) {
+            routingControl.setWaypoints(waypoints);
+        } else {
+            routingControl = L.Routing.control({
+                waypoints: waypoints,
+                routeWhileDragging: false,
+                show: false, // Hides text panel on fullscreen navigator map
+                addWaypoints: false,
+                draggableWaypoints: false,
+                lineOptions: {
+                    styles: [{ color: '#10b981', opacity: 0.85, weight: 6 }]
+                },
+                createMarker: function(i, wp, nWps) {
+                    if (i === 0) {
+                        return L.marker(wp.latLng).bindPopup("<strong>Pickup Source</strong>");
+                    } else {
+                        return L.marker(wp.latLng).bindPopup("<strong>NGO Drop-off Point</strong>");
+                    }
+                }
+            }).addTo(navMap);
+        }
+        
+        // fit view bounds
+        const bounds = L.latLngBounds(waypoints);
+        navMap.fitBounds(bounds, { padding: [50, 50] });
+    }
+});
+</script>
+
+<style>
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.7);
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 10px rgba(2, 132, 199, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(2, 132, 199, 0);
+    }
+}
+.custom-nav-icon {
+    background: transparent;
+    border: none;
+}
+</style>
+
+<!-- Fullscreen Navigator Overlay -->
+<div id="fullscreenNavigator" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: white; font-family: 'Inter', sans-serif;">
+    <!-- Navigator Map -->
+    <div id="navigatorMap" style="width: 100vw; height: 100vh; position: absolute; top: 0; left: 0;"></div>
+
+    <!-- Floating Navigation Controls Box (Google Maps style) -->
+    <div class="card border-0 shadow-lg p-3" style="position: absolute; top: 20px; left: 20px; z-index: 10000; width: 340px; border-radius: 16px; background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-location-arrow text-emerald animate-pulse" style="font-size: 1.1rem;"></i>
+                <h6 class="fw-extrabold text-dark mb-0" style="font-size:0.95rem;">EcoEats Co-Navigator</h6>
+            </div>
+            <button type="button" id="closeNavigator" class="btn-close shadow-none border-0" aria-label="Close" style="font-size: 0.8rem; cursor:pointer;"></button>
+        </div>
+        
+        <!-- Info Block -->
+        <div class="mb-3">
+            <span class="text-muted extra-small text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.05em;">Active Transit Route</span>
+            <h6 class="fw-bold text-dark mt-0.5 mb-1 text-truncate" style="font-size:0.82rem;">{{ active_delivery.food_listing.food_name }}</h6>
+            <div id="navStatus" class="text-muted extra-small" style="font-size:0.7rem;">
+                <i class="fas fa-circle text-secondary me-1" style="font-size:0.5rem;"></i> Navigator Idle. Ready to guide.
+            </div>
+        </div>
+
+        <!-- Action Controls -->
+        <div class="d-flex gap-2">
+            <button type="button" id="startNavigationBtn" class="btn btn-sm btn-primary w-50 py-2 fw-bold text-white rounded-3 border-0" style="background-color: #0284c7; font-size: 0.75rem; cursor:pointer;">
+                <i class="fas fa-play me-1"></i> Start Guide
+            </button>
+            <button type="button" id="shareLocationBtn" class="btn btn-sm btn-outline-secondary border rounded-3 w-50 py-2 fw-bold" style="font-size: 0.75rem; background: #ffffff; color: var(--text-slate); cursor:pointer;" disabled>
+                <i class="fas fa-share-nodes text-primary me-1"></i> Share Location
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

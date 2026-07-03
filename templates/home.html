@@ -1,0 +1,572 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}EcoEats | Enterprise Food Redistribution Logistics{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --slate-900: #0f172a;
+        --slate-500: #64748b;
+        --border-color: #e2e8f0;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    /* Hero Section Refinement */
+    .hero-bg {
+        background: radial-gradient(circle at 100% 0%, #f0fdf4 0%, #ffffff 100%);
+        overflow: hidden;
+    }
+
+    .hero-h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1.05;
+        color: var(--slate-900);
+    }
+
+    .highlight-text {
+        color: var(--brand-emerald);
+        position: relative;
+        display: inline-block;
+    }
+
+    /* Visual Mockup Styling */
+    .marketplace-mockup {
+        background: white;
+        border-radius: 1.5rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+        transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
+        transition: transform 0.5s ease;
+    }
+
+    .marketplace-mockup:hover {
+        transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+    }
+
+    /* Stats Cards */
+    .stat-pill {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: 1.25rem;
+        padding: 1.75rem;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        min-height: 160px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+    }
+
+    .stat-pill:hover {
+        border-color: var(--brand-emerald);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -5px rgba(16, 185, 129, 0.08);
+    }
+
+    /* How it Works */
+    .step-card {
+        border: 1.5px solid var(--border-color);
+        border-radius: 1.25rem;
+        background: #ffffff;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+    }
+
+    .step-card:hover {
+        border-color: var(--brand-emerald);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -5px rgba(16, 185, 129, 0.08);
+    }
+
+    .step-number {
+        width: 42px;
+        height: 42px;
+        background: var(--brand-emerald-light);
+        color: var(--brand-emerald-dark);
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.95rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .cta-gradient {
+        background: linear-gradient(135deg, var(--brand-emerald-dark) 0%, var(--slate-900) 100%);
+        border-radius: 1.5rem;
+        padding: 4.5rem 3rem !important;
+        box-shadow: 0 20px 25px -5px rgba(6, 95, 70, 0.15);
+    }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1199.98px) {
+        .hero-h1 {
+            font-size: 2.8rem;
+        }
+
+        .marketplace-mockup {
+            transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .hero-h1 {
+            font-size: 2.25rem;
+        }
+
+        .lead {
+            font-size: 1rem !important;
+        }
+
+        .stat-pill {
+            height: auto;
+            padding: 1.25rem;
+        }
+
+        .step-card {
+            padding: 1.5rem;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .hero-bg {
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
+        }
+
+        .hero-h1 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem !important;
+        }
+
+        .lead {
+            font-size: 0.9rem !important;
+            margin-bottom: 1.5rem !important;
+        }
+
+        .d-flex.gap-3 {
+            flex-direction: column !important;
+        }
+
+        .btn-lg {
+            width: 100%;
+        }
+
+        .stat-pill {
+            padding: 1rem;
+            height: auto;
+            text-align: center;
+        }
+
+        .stat-pill .h2 {
+            font-size: 1.75rem !important;
+        }
+
+        .step-card {
+            padding: 1.25rem;
+        }
+
+        .step-number {
+            width: 36px;
+            height: 36px;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .d-none.d-lg-block {
+            margin-bottom: 2rem;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .hero-bg {
+            padding-top: 1.5rem !important;
+            padding-bottom: 1.5rem !important;
+        }
+
+        .hero-h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem !important;
+        }
+
+        .badge {
+            font-size: 0.7rem !important;
+            padding: 0.4rem 0.75rem !important;
+        }
+
+        .lead {
+            font-size: 0.85rem !important;
+            line-height: 1.5;
+            margin-bottom: 1.25rem !important;
+        }
+
+        .btn-lg {
+            font-size: 0.85rem;
+            padding: 0.5rem 1.25rem !important;
+            width: 100%;
+        }
+
+        .pt-4.border-top {
+            padding-top: 1.5rem !important;
+            margin-top: 1.5rem;
+        }
+
+        .opacity-50.grayscale {
+            font-size: 1.25rem;
+            gap: 0.75rem !important;
+        }
+
+        .stat-pill {
+            padding: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-pill .h2 {
+            font-size: 1.5rem !important;
+        }
+
+        .extra-small {
+            font-size: 0.65rem !important;
+        }
+
+        .step-card {
+            padding: 1rem;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .marketplace-mockup {
+            border-radius: 1rem;
+            padding: 1rem !important;
+        }
+
+        .marketplace-mockup .p-4 {
+            padding: 1rem !important;
+        }
+
+        .marketplace-mockup .p-3 {
+            padding: 0.75rem !important;
+        }
+    }
+
+    @media (max-width: 479.98px) {
+        .hero-h1 {
+            font-size: 1.25rem;
+        }
+
+        .lead {
+            font-size: 0.8rem !important;
+        }
+
+        .btn-lg {
+            font-size: 0.75rem;
+            padding: 0.4rem 1rem !important;
+        }
+
+        .stat-pill {
+            padding: 0.75rem;
+        }
+
+        .stat-pill .h2 {
+            font-size: 1.3rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .step-card {
+            padding: 0.75rem;
+        }
+    }
+</style>
+
+<section class="hero-bg py-5 border-bottom">
+    <div class="container py-lg-5">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="pe-lg-5">
+                    <span
+                        class="badge bg-emerald-light text-emerald-dark px-3 py-2 rounded-pill fw-bold extra-small mb-4 shadow-sm"
+                        style="background: var(--brand-emerald-light); color: var(--brand-emerald-dark);">
+                        <i class="fas fa-shield-check me-2"></i>GOVERNMENT VERIFIED LOGISTICS
+                    </span>
+                    <h1 class="hero-h1 mb-4">
+                        Surplus food is an <span class="highlight-text">asset</span>, not waste.
+                    </h1>
+                    <p class="lead text-muted mb-5" style="font-weight: 400; line-height: 1.6;">
+                        EcoEats provides enterprise-grade infrastructure to redistribute surplus resources to local
+                        communities in real-time. Secure, fast, and high-impact.
+                    </p>
+
+                    <div class="d-flex gap-3 flex-wrap mb-5">
+                        <a href="{% url 'accounts:register' %}" class="btn btn-brand btn-lg shadow-lg">
+                            Get Started Free <i class="fas fa-arrow-right ms-2 small"></i>
+                        </a>
+                        <a href="#how-it-works" class="btn btn-white border btn-lg px-4 fw-bold text-muted shadow-sm">
+                            How It Works
+                        </a>
+                    </div>
+
+                    <div class="pt-4 border-top">
+                        <p class="extra-small fw-bold text-muted text-uppercase mb-3 opacity-75">TRUSTED BY NETWORK
+                            PARTNERS</p>
+                        <div class="d-flex gap-4 align-items-center opacity-50 grayscale">
+                            <i class="fas fa-hotel fa-lg"></i>
+                            <i class="fas fa-utensils fa-lg"></i>
+                            <i class="fas fa-hand-holding-heart fa-lg"></i>
+                            <i class="fas fa-truck fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="marketplace-mockup p-2">
+                    <div class="bg-slate-50 rounded-3 p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                            <div class="fw-bold text-dark small"><i
+                                    class="fas fa-circle text-success me-2 extra-small"></i>Live Marketplace Feed</div>
+                            <div class="badge bg-light text-muted extra-small">UPDATED JUST NOW</div>
+                        </div>
+
+                        <div class="d-flex align-items-center bg-white p-3 rounded-3 shadow-sm border mb-3">
+                            <div class="bg-emerald-light text-emerald p-2 rounded-2 me-3"><i
+                                    class="fas fa-bread-slice"></i></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold small">Assorted Bakery Box</div>
+                                <div class="extra-small text-muted">15kg • Downtown Hub</div>
+                            </div>
+                            <span class="badge bg-success extra-small">AVAILABLE</span>
+                        </div>
+
+                        <div class="d-flex align-items-center bg-white p-3 rounded-3 shadow-sm border mb-3 opacity-75">
+                            <div class="bg-primary-light text-primary p-2 rounded-2 me-3"><i class="fas fa-carrot"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold small">Mixed Vegetables</div>
+                                <div class="extra-small text-muted">40kg • Westside Pantry</div>
+                            </div>
+                            <span class="badge bg-warning text-dark extra-small">CLAIMING...</span>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <div class="spinner-grow spinner-grow-sm text-success" role="status"></div>
+                            <span class="extra-small text-muted ms-2">Scanning for nearby surplus...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="stat-pill">
+                    <div class="text-emerald-dark h2 fw-bold mb-1">{{ total_quantity_str }}</div>
+                    <div class="extra-small text-muted fw-bold text-uppercase">Redistributed Yield</div>
+                    <p class="small text-muted mt-2 mb-0">Total food resources diverted from landfills in real-time.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-pill">
+                    <div class="text-emerald-dark h2 fw-bold mb-1">{{ total_partners }}</div>
+                    <div class="extra-small text-muted fw-bold text-uppercase">Verified Partners</div>
+                    <p class="small text-muted mt-2 mb-0">Active hotels, restaurants, and NGOs in the ecosystem.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-pill">
+                    <div class="text-emerald-dark h2 fw-bold mb-1">{{ co2_offset_str }}</div>
+                    <div class="extra-small text-muted fw-bold text-uppercase">CO2e Offset</div>
+                    <p class="small text-muted mt-2 mb-0">Calculated environmental impact of our network's logistics.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="how-it-works" class="py-5"
+    style="background-color: var(--slate-50); border-bottom: 1.5px solid var(--border-color);">
+    <div class="container py-5">
+        <div class="text-center mb-5 pb-2">
+            <span class="info-tag mb-2"><i class="fas fa-circle-nodes text-emerald me-1"></i>Redistribution
+                Lifecycle</span>
+            <h2 class="fw-bold text-dark h1 mt-2">How EcoEats Works</h2>
+            <p class="text-muted mx-auto" style="max-width: 550px;">A secure, automated protocol connecting surplus food
+                to local communities in minutes.</p>
+        </div>
+
+        <div class="row g-4 mt-2">
+            <!-- Step 1 -->
+            <div class="col-lg-4">
+                <div class="card border-0 h-100 p-4 p-xl-5 rounded-4 shadow-sm"
+                    style="background-color: #ffffff; border: 1.5px solid var(--border-color) !important;">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="logo-box"
+                            style="width: 44px; height: 44px; background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);">
+                            <i class="fas fa-store text-white" style="font-size:1.1rem;"></i>
+                        </div>
+                        <span class="fw-bold text-emerald"
+                            style="font-size: 1.5rem; opacity: 0.3; color: var(--brand-emerald-dark) !important;">01</span>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">1. Post Surplus</h5>
+                    <p class="small text-muted mb-0" style="line-height: 1.6;">
+                        Donors list surplus inventory (servings, packaging types, and pickup windows). The system
+                        immediately verifies it for matching.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="col-lg-4">
+                <div class="card border-0 h-100 p-4 p-xl-5 rounded-4 shadow-sm"
+                    style="background-color: #ffffff; border: 1.5px solid var(--border-color) !important;">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="logo-box"
+                            style="width: 44px; height: 44px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);">
+                            <i class="fas fa-map-marked-alt text-white" style="font-size:1.1rem;"></i>
+                        </div>
+                        <span class="fw-bold text-primary"
+                            style="font-size: 1.5rem; opacity: 0.3; color: #1d4ed8 !important;">02</span>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">2. Match & Route</h5>
+                    <p class="small text-muted mb-0" style="line-height: 1.6;">
+                        Nearby NGOs receive urgent alerts. They can select items and calculate optimized pickup runs on
+                        proximity maps in real-time.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="col-lg-4">
+                <div class="card border-0 h-100 p-4 p-xl-5 rounded-4 shadow-sm"
+                    style="background-color: #ffffff; border: 1.5px solid var(--border-color) !important;">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="logo-box"
+                            style="width: 44px; height: 44px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.2);">
+                            <i class="fas fa-handshake text-white" style="font-size:1.1rem;"></i>
+                        </div>
+                        <span class="fw-bold text-purple"
+                            style="font-size: 1.5rem; opacity: 0.3; color: #6d28d9 !important;">03</span>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">3. Safe Handover</h5>
+                    <p class="small text-muted mb-0" style="line-height: 1.6;">
+                        Handover is signed off using digital compliance waivers, automatically compiling trace metrics
+                        and CO2 offsets in real-time.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5" style="background-color: #ffffff; border-bottom: 1.5px solid var(--border-color);">
+    <div class="container py-5">
+        <div class="text-center mb-5 pb-2">
+            <span class="info-tag mb-2"><i class="fas fa-cubes text-emerald me-1"></i>Platform Capabilities</span>
+            <h2 class="fw-bold text-dark h1 mt-2">Built for Impact & Speed</h2>
+            <p class="text-muted mx-auto" style="max-width: 550px;">A secure web infrastructure designed to eliminate
+                food waste barriers.</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            <!-- Feature 1 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 p-4 rounded-4 h-100 shadow-sm"
+                    style="background-color: var(--slate-50); border: 1px solid var(--border-color) !important;">
+                    <div class="text-emerald mb-3"><i class="fas fa-route fa-2x"
+                            style="color: var(--brand-emerald-dark);"></i></div>
+                    <h6 class="fw-bold text-dark mb-2">Optimized Route Coordination</h6>
+                    <p class="extra-small text-muted mb-0" style="line-height: 1.6;">
+                        Receivers can claim multiple listings along a single travel path, calculating distance, transit
+                        times, and total meal yield dynamically using proximity mapping.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 p-4 rounded-4 h-100 shadow-sm"
+                    style="background-color: var(--slate-50); border: 1px solid var(--border-color) !important;">
+                    <div class="text-emerald mb-3"><i class="fas fa-bullhorn fa-2x" style="color: #ef4444;"></i></div>
+                    <h6 class="fw-bold text-dark mb-2">3km Radius Broadcasts</h6>
+                    <p class="extra-small text-muted mb-0" style="line-height: 1.6;">
+                        Donors experiencing massive banquet or order cancellations can send instant push notifications
+                        to all verified receiver organizations within a 3km radius.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 p-4 rounded-4 h-100 shadow-sm"
+                    style="background-color: var(--slate-50); border: 1px solid var(--border-color) !important;">
+                    <div class="text-emerald mb-3"><i class="fas fa-file-signature fa-2x" style="color: #3b82f6;"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-2">Good Samaritan Waiver</h6>
+                    <p class="extra-small text-muted mb-0" style="line-height: 1.6;">
+                        Generate signed digital compliance certificates during handover to verify thermal regulations
+                        and food packaging safety, protecting food donors from liability.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5" style="background-color: var(--slate-50);">
+    <div class="container py-4">
+        <div class="card border-0 p-5 rounded-4 text-center text-white"
+            style="background: linear-gradient(135deg, var(--brand-emerald-dark) 0%, var(--slate-900) 100%); box-shadow: 0 20px 25px -5px rgba(6, 95, 70, 0.15);">
+            <div class="row justify-content-center py-3">
+                <div class="col-lg-8">
+                    <h2 class="fw-bold h1 text-white mb-3">Scale your social impact today.</h2>
+                    <p class="mb-4 opacity-75 lead" style="font-size: 1.05rem;">Join the network of verified
+                        organizations building a circular food economy.</p>
+                    <div class="d-flex gap-2.5 justify-content-center flex-wrap">
+                        <a href="{% url 'accounts:register' %}"
+                            class="btn btn-light btn-lg px-4 py-2.5 fw-bold text-emerald shadow-sm rounded-pill"
+                            style="color: var(--brand-emerald-dark) !important; font-size: 0.9rem;">
+                            Create Account
+                        </a>
+                        <a href="{% url 'contact_sales' %}"
+                            class="btn btn-outline-light btn-lg px-4 py-2.5 fw-bold rounded-pill"
+                            style="font-size: 0.9rem; border-width: 1.5px;">
+                            Contact Sales
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

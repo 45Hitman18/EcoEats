@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}CSR & Environmental Impact Report | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --slate-bg: #f8fafc;
+        --bronze: #cd7f32;
+    }
+
+    .csr-portal-section {
+        background-color: var(--slate-bg);
+        min-height: 100vh;
+        padding: 2.5rem 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Back Link Button */
+    .btn-dashboard-back {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        color: var(--text-slate) !important;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-size: 0.82rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .btn-dashboard-back:hover {
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald-dark) !important;
+        background-color: var(--brand-emerald-light);
+    }
+
+    /* Impact Cards */
+    .impact-metric-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1.5px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+        padding: 1.5rem;
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .impact-metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.04);
+        border-color: var(--brand-emerald);
+    }
+
+    .impact-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        flex-shrink: 0;
+    }
+
+    .bg-gradient-co2 { background: #eff6ff; color: #3b82f6; }
+    .bg-gradient-water { background: #e0f2fe; color: #0284c7; }
+    .bg-gradient-meals { background: #fef3c7; color: #d97706; }
+
+    /* Dashboard Layout Panels */
+    .dashboard-panel-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1.5px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .panel-header-bar {
+        padding: 1.25rem 1.5rem;
+        background-color: #ffffff;
+        border-bottom: 1.5px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .panel-header-bar h5 {
+        color: var(--text-slate);
+        font-weight: 700;
+        margin: 0;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Certificate Design */
+    .certificate-container {
+        border: 8px double var(--brand-emerald-dark);
+        padding: 2.5rem;
+        background: #ffffff;
+        text-align: center;
+        position: relative;
+        border-radius: 6px;
+        box-shadow: inset 0 0 0 2px var(--brand-emerald-light);
+        margin: 0.5rem;
+    }
+
+    .certificate-badge-seal {
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #fcd34d 0%, #d97706 100%);
+        box-shadow: 0 6px 16px rgba(217, 119, 6, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 1.85rem;
+        color: white;
+        border: 3px solid #ffffff;
+    }
+
+    .certificate-title {
+        font-family: 'Outfit', 'Georgia', serif;
+        font-size: 1.75rem;
+        color: var(--brand-emerald-dark);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .certificate-subtitle {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+    }
+
+    .certificate-recipient {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--text-slate);
+        border-bottom: 2px solid var(--border-color);
+        display: inline-block;
+        padding-bottom: 0.35rem;
+        min-width: 250px;
+        margin-bottom: 1.5rem;
+    }
+
+    .certificate-body {
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: var(--text-slate);
+        max-width: 440px;
+        margin: 0 auto 2.5rem;
+    }
+
+    .certificate-signature-block {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 440px;
+        margin: 0 auto;
+        border-top: 1px solid var(--border-color);
+        padding-top: 1rem;
+    }
+
+    /* Print View specific styles */
+    @media print {
+        /* Hide all non-printable elements */
+        .no-print, nav, header, footer, .btn-print-action, .btn-dashboard-back, .navbar, .navbar-container {
+            display: none !important;
+        }
+
+        /* Reset outer containers so certificate takes up full page */
+        body, html, .csr-portal-section, .container, .row, .col-lg-6, .card, .card-body {
+            background: #ffffff !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            width: 100% !important;
+            height: auto !important;
+            display: block !important;
+        }
+
+        /* Certificate block printable container styles */
+        #printArea {
+            border: 10px double #059669 !important;
+            padding: 3rem 2rem !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            margin: 2rem auto !important;
+            width: 90% !important;
+            max-width: 750px !important;
+            background: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    }
+</style>
+
+<div class="csr-portal-section">
+    <div class="container">
+
+        <!-- Navigation header -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3 no-print">
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'donor:dashboard' %}" class="text-muted extra-small text-decoration-none">Dashboard</a>
+                <span class="text-muted extra-small">/</span>
+                <span class="text-dark fw-bold extra-small">CSR Impact Report</span>
+            </div>
+            
+            <a href="{% url 'donor:dashboard' %}" class="btn-dashboard-back">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <!-- 3-Card Metrics Row -->
+        <div class="row g-4 mb-4 no-print">
+            <!-- CO2 Offset -->
+            <div class="col-md-4">
+                <div class="card impact-metric-card border-0">
+                    <div class="impact-icon-box bg-gradient-co2"><i class="fas fa-cloud-sun"></i></div>
+                    <div>
+                        <span class="d-block text-muted fw-bold extra-small text-uppercase mb-0.5" style="font-size:0.65rem; letter-spacing:0.05em;">CO2 Emissions Prevented</span>
+                        <h3 class="fw-extrabold text-dark mb-0" style="font-size: 1.6rem;">{{ co2_offset }} kg</h3>
+                        <span class="text-muted extra-small" style="font-size:0.7rem;">equivalent saved from landfills</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Water Conserved -->
+            <div class="col-md-4">
+                <div class="card impact-metric-card border-0">
+                    <div class="impact-icon-box bg-gradient-water"><i class="fas fa-droplet"></i></div>
+                    <div>
+                        <span class="d-block text-muted fw-bold extra-small text-uppercase mb-0.5" style="font-size:0.65rem; letter-spacing:0.05em;">Liters of Water Saved</span>
+                        <h3 class="fw-extrabold text-dark mb-0" style="font-size: 1.6rem;">{{ water_saved }} L</h3>
+                        <span class="text-muted extra-small" style="font-size:0.7rem;">in food production footprint</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meals Provided -->
+            <div class="col-md-4">
+                <div class="card impact-metric-card border-0">
+                    <div class="impact-icon-box bg-gradient-meals"><i class="fas fa-utensils"></i></div>
+                    <div>
+                        <span class="d-block text-muted fw-bold extra-small text-uppercase mb-0.5" style="font-size:0.65rem; letter-spacing:0.05em;">Equivalent Meals Fed</span>
+                        <h3 class="fw-extrabold text-dark mb-0" style="font-size: 1.6rem;">{{ meals_provided }} meals</h3>
+                        <span class="text-muted extra-small" style="font-size:0.7rem;">provided to local NGO partners</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <!-- Left Panel: Historical progression chart -->
+            <div class="col-lg-6 no-print">
+                <div class="card dashboard-panel-card border-0">
+                    <div class="panel-header-bar">
+                        <h5><i class="fas fa-chart-line text-emerald"></i> CSR Contribution History</h5>
+                    </div>
+                    <div class="card-body p-4" style="height: 380px;">
+                        <canvas id="sustainabilityHistoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Environmental equivalence callout -->
+                <div class="card dashboard-panel-card border-0 p-4" style="background: linear-gradient(135deg, var(--brand-emerald-dark) 0%, var(--slate-900) 100%); color: white;">
+                    <h6 class="fw-bold text-white mb-2"><i class="fas fa-lightbulb text-warning me-1.5 animate-bounce"></i> Environmental Footprint Impact</h6>
+                    <p class="small text-white-50 mb-0" style="line-height:1.5;">
+                        By redirecting surplus food from waste bins to local communities, you directly prevent anaerobic digestion and methane emissions. Methane is 25x more potent than CO2 at trapping atmospheric heat. Your donations represent a significant contribution to climate action!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Panel: Downloadable CSR certification badge -->
+            <div class="col-lg-6">
+                <div class="card dashboard-panel-card border-0">
+                    <div class="panel-header-bar no-print">
+                        <h5><i class="fas fa-certificate text-emerald"></i> Sustainability Certificate</h5>
+                        <button class="btn btn-emerald btn-sm px-3 rounded-2 text-white border-0 fw-bold btn-print-action" onclick="window.print();" style="background: var(--brand-emerald-dark); font-size:0.75rem;"><i class="fas fa-print me-1.5"></i> Print Certificate</button>
+                    </div>
+                    <div class="card-body p-3">
+                        
+                        <!-- Printable Area Frame -->
+                        <div class="certificate-container" id="printArea">
+                            <div class="certificate-badge-seal">
+                                <i class="fas {{ cert_icon }}"></i>
+                            </div>
+                            <div class="certificate-title">Certificate of Sustainability</div>
+                            <div class="certificate-subtitle">Presented by EcoEats Platform</div>
+                            
+                            <p class="text-muted extra-small mb-1">THIS IS PROUDLY CERTIFIED TO</p>
+                            <div class="certificate-recipient">{{ request.user.username }}</div>
+                            
+                            <p class="certificate-body">
+                                For outstanding efforts in preventing food waste and fostering ecological sustainability. By successfully redistributing surplus inventory, this organization saved <strong>{{ total_weight }} kg</strong> of food, preventing landfill carbon accumulation.
+                            </p>
+
+                            <div class="certificate-signature-block">
+                                <div class="text-start">
+                                    <span class="text-muted extra-small d-block" style="font-size:0.6rem;">CERTIFIED DATE</span>
+                                    <span class="fw-bold text-dark extra-small" style="font-size:0.72rem;">{{ today_date }}</span>
+                                </div>
+                                <div class="text-end">
+                                    <span class="text-muted extra-small d-block" style="font-size:0.6rem;">SUSTAINABILITY LEVEL</span>
+                                    <span class="badge {{ cert_badge_color }} extra-small rounded-pill" style="font-size:0.65rem;">{{ certification_tier }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- ChartJS Script setup -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const ctx = document.getElementById('sustainabilityHistoryChart');
+        if (!ctx) return;
+
+        const labels = {{ chart_labels|safe }};
+        const values = {{ chart_values|safe }};
+
+        const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, '#10b981');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Rescued Food (kg)',
+                    data: values,
+                    borderColor: '#10b981',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#10b981',
+                    pointRadius: 5,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 10,
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        displayColors: false,
+                        callbacks: {
+                            label: ctx => `${ctx.parsed.y} kg rescued`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f1f5f9' },
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    }
+                }
+            }
+        });
+    } catch (e) {
+        console.warn('Failed to render CSR chart:', e);
+    }
+});
+</script>
+{% endblock %}

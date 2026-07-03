@@ -1,0 +1,520 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Route Coordinator | Receiver Portal{% endblock %}
+
+{% block content %}
+<!-- Include Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Include Leaflet Routing Machine -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --brand-emerald-glow: rgba(16, 185, 129, 0.15);
+        --slate-bg: #f8fafc;
+        --border-color: #e2e8f0;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+    }
+
+    .route-section {
+        background-color: var(--slate-bg);
+        min-height: calc(100vh - 140px);
+        padding: 2rem 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    .layout-card {
+        border-radius: 1rem;
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+        overflow: hidden;
+    }
+
+    .map-container {
+        height: 600px;
+        width: 100%;
+        z-index: 1;
+    }
+
+    .sidebar-panel {
+        max-height: 600px;
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+
+    /* List item checkcards */
+    .listing-check-card {
+        border: 1.5px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1rem;
+        transition: all 0.2s ease;
+        background-color: #ffffff;
+        cursor: pointer;
+        user-select: none;
+        margin-bottom: 0.75rem;
+        position: relative;
+    }
+    .listing-check-card:hover {
+        border-color: var(--brand-emerald);
+        background-color: var(--slate-bg);
+    }
+    .listing-check-card.selected {
+        border-color: var(--brand-emerald) !important;
+        background-color: var(--brand-emerald-light) !important;
+    }
+
+    /* Stats box */
+    .stats-box {
+        background: var(--text-slate);
+        color: #ffffff;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1);
+    }
+
+    .stats-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+    }
+
+    /* Urgency indicators */
+    .urgency-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+    }
+    .urgency-safe { background-color: #d1fae5; color: #065f46; }
+    .urgency-caution { background-color: #fef3c7; color: #92400e; }
+    .urgency-urgent { background-color: #fee2e2; color: #b91c1c; }
+
+    /* Custom routing instruction panel hide */
+    .leaflet-routing-container {
+        display: none !important;
+    }
+
+    /* Stepper and inputs inside modal */
+    .modal-content {
+        border-radius: 1rem !important;
+        border: none !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .form-control,
+    input[type="text"],
+    input[type="datetime-local"] {
+        border-radius: 8px !important;
+        padding: 0.6rem 0.85rem !important;
+        border: 1.5px solid var(--border-color) !important;
+    }
+    .form-control:focus {
+        border-color: var(--brand-emerald) !important;
+        box-shadow: 0 0 0 3px var(--brand-emerald-glow) !important;
+    }
+
+    .btn-claim-route {
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        border: none;
+        padding: 0.75rem 1.25rem;
+        font-weight: 700;
+        border-radius: 8px;
+        color: white !important;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+        transition: all 0.25s ease;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .btn-claim-route:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+    }
+    .btn-claim-route:disabled {
+        background: #cbd5e1 !important;
+        color: #94a3b8 !important;
+        box-shadow: none !important;
+        transform: none !important;
+        cursor: not-allowed;
+    }
+</style>
+
+<section class="route-section">
+    <div class="container-fluid px-md-5">
+        
+        <!-- Header -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb extra-small fw-bold text-uppercase mb-1" style="letter-spacing: 0.05em; font-size: 0.7rem;">
+                        <li class="breadcrumb-item"><a href="{% url 'receiver:dashboard' %}" class="text-muted text-decoration-none hover-emerald">Receiver Portal</a></li>
+                        <li class="breadcrumb-item active text-emerald" style="color: var(--brand-emerald) !important;">Route Coordinator</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold text-dark mb-1">Route Coordinator & Proximity Map</h1>
+                <p class="text-muted mb-0 small">Batch-claim multiple surplus food listings along a single optimized route.</p>
+            </div>
+            <div>
+                <a href="{% url 'receiver:dashboard' %}" class="btn btn-white btn-sm border px-3 fw-bold text-muted shadow-sm rounded-pill" style="font-size: 0.85rem;">
+                    <i class="fas fa-arrow-left me-1"></i> Marketplace
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Map Card (Left Column) -->
+            <div class="col-lg-8">
+                <div class="layout-card">
+                    <div id="route-map" class="map-container"></div>
+                </div>
+            </div>
+
+            <!-- Route Coordinator Panel (Right Column) -->
+            <div class="col-lg-4">
+                <div class="layout-card sidebar-panel d-flex flex-column h-100">
+                    
+                    <!-- Stats Box -->
+                    <div class="stats-box">
+                        <div class="stats-title mb-3">Calculated Route Summary</div>
+                        <div class="row g-2">
+                            <div class="col-4 border-end border-secondary">
+                                <div class="small text-muted mb-0.5" style="font-size: 0.65rem;">Distance</div>
+                                <strong class="h6 text-white" id="route-distance">0.0 km</strong>
+                            </div>
+                            <div class="col-4 border-end border-secondary ps-2">
+                                <div class="small text-muted mb-0.5" style="font-size: 0.65rem;">Transit Time</div>
+                                <strong class="h6 text-white" id="route-time">0 mins</strong>
+                            </div>
+                            <div class="col-4 ps-2">
+                                <div class="small text-muted mb-0.5" style="font-size: 0.65rem;">Yield</div>
+                                <strong class="h6 text-white" id="route-yield">0 Servings</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="text-muted fw-bold text-uppercase mb-3" style="font-size: 0.72rem; letter-spacing: 0.05em;">Available Listings Near You</h6>
+
+                    <!-- Available Listings List -->
+                    <div class="flex-grow-1 mb-4" id="listings-checklist" style="max-height: 280px; overflow-y: auto;">
+                        <!-- Injected by JavaScript -->
+                    </div>
+
+                    <div class="mt-auto">
+                        <button type="button" class="btn btn-claim-route" id="btnClaimRoute" disabled>
+                            <i class="fas fa-truck-loading"></i> Claim Selected Route
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- Claim Details Modal -->
+<div class="modal fade" id="claimModal" tabindex="-1" aria-labelledby="claimModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="claimModalLabel">Confirm Batch Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="batchClaimForm" method="post" action="{% url 'receiver:batch_claim' %}">
+                {% csrf_token %}
+                <div class="modal-body py-4">
+                    <!-- Hidden food IDs input -->
+                    <input type="hidden" name="food_ids" id="modalFoodIds">
+                    
+                    <div class="alert alert-success border-0 bg-emerald-light text-emerald-dark p-3 rounded-3 mb-4">
+                        <div class="d-flex gap-2">
+                            <i class="fas fa-check-circle mt-0.5"></i>
+                            <div>
+                                <span class="fw-bold small">Route Selection Confirmed:</span>
+                                <div class="extra-small opacity-90 mt-1" id="modalRouteSummary"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Pickup Target Time</label>
+                            <input type="datetime-local" class="form-control" name="pickup_time" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Contact Person Name</label>
+                            <input type="text" class="form-control" name="contact_person" placeholder="e.g. John Doe" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Contact Phone Number</label>
+                            <input type="text" class="form-control" name="contact_number" placeholder="e.g. 9876543210" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Vehicle Details (For Gate Security)</label>
+                            <input type="text" class="form-control" name="vehicle_info" placeholder="e.g. White Van (DL-3C-1234)" required>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check d-flex align-items-center gap-2 mt-1">
+                                <input type="checkbox" class="form-check-input" id="id_needs_delivery_map" name="needs_delivery" value="true">
+                                <label class="form-check-label extra-small fw-bold text-muted" for="id_needs_delivery_map" style="margin-bottom:0; cursor:pointer;">
+                                    Request Volunteer Logistics Driver Delivery
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-success px-4" style="background-color: var(--brand-emerald-dark); border: none;">Confirm Claim</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Parse coordinates and listings data from context
+    const listings = JSON.parse('{{ listings_json|safe }}');
+    const receiverLat = parseFloat("{{ receiver_lat }}");
+    const receiverLng = parseFloat("{{ receiver_lng }}");
+
+    // Initialize Leaflet Map
+    const map = L.map('route-map').setView([receiverLat, receiverLng], 13);
+    
+    L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 22,
+        attribution: '© Google Maps'
+    }).addTo(map);
+
+    // Custom icons
+    const homeIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    const foodIconBlue = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    const foodIconGold = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    const foodIconRed = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    // Add Home/Receiver marker
+    L.marker([receiverLat, receiverLng], { icon: homeIcon }).addTo(map)
+        .bindPopup('<strong>My Center</strong><br>Start point of your route.').openPopup();
+
+    const markersMap = {};
+    const checklistContainer = document.getElementById('listings-checklist');
+
+    // Populate Sidebar and Add Markers to Map
+    if (listings.length === 0) {
+        checklistContainer.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-store-slash fa-2x mb-2 text-light"></i>
+                <p class="extra-small mb-0">No available food listings within map range.</p>
+            </div>
+        `;
+    } else {
+        listings.forEach(food => {
+            // Determine Marker Color and Urgency badge based on hours_remaining
+            let markerIcon = foodIconBlue;
+            let urgencyClass = 'urgency-safe';
+            let urgencyText = 'Safe';
+
+            if (food.hours_remaining < 2) {
+                markerIcon = foodIconRed;
+                urgencyClass = 'urgency-urgent';
+                urgencyText = 'Urgent (<2h)';
+            } else if (food.hours_remaining < 12) {
+                markerIcon = foodIconGold;
+                urgencyClass = 'urgency-caution';
+                urgencyText = 'Caution (<12h)';
+            }
+
+            // Create Marker on Map
+            const m = L.marker([food.latitude, food.longitude], { icon: markerIcon }).addTo(map)
+                .bindPopup(`
+                    <strong>${food.food_name}</strong><br>
+                    Donor: ${food.donor}<br>
+                    Qty: ${food.quantity} servings<br>
+                    Status: <span class="urgency-badge ${urgencyClass}" style="font-size:0.6rem;">${urgencyText}</span>
+                `);
+            markersMap[food.id] = m;
+
+            // Create Sidebar Card
+            const card = document.createElement('div');
+            card.className = 'listing-check-card';
+            card.id = `checkcard-${food.id}`;
+            card.innerHTML = `
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="urgency-badge ${urgencyClass}">${urgencyText}</span>
+                    <span class="extra-small text-muted"><i class="fas fa-car-side"></i> ${food.distance} km away</span>
+                </div>
+                <div class="d-flex align-items-start gap-2">
+                    <input class="form-check-input mt-1 list-checkbox" type="checkbox" value="${food.id}" data-qty="${food.quantity}" data-lat="${food.latitude}" data-lng="${food.longitude}" id="check-${food.id}">
+                    <label class="form-check-label fw-bold text-dark small flex-grow-1" for="check-${food.id}">
+                        ${food.food_name}
+                    </label>
+                </div>
+                <div class="extra-small text-muted mt-1 ps-4">
+                    Donor: <strong>${food.donor}</strong> | Yield: ${food.quantity} portions
+                </div>
+            `;
+            checklistContainer.appendChild(card);
+
+            // Double click card to checkbox select and card click listener
+            card.addEventListener('click', function(e) {
+                if (e.target.type !== 'checkbox') {
+                    const chk = document.getElementById(`check-${food.id}`);
+                    chk.checked = !chk.checked;
+                    chk.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+    }
+
+    // Routing Logic Variables
+    let routingControl = null;
+    const btnClaimRoute = document.getElementById('btnClaimRoute');
+
+    // Watch Checkbox Changes
+    document.querySelectorAll('.list-checkbox').forEach(chk => {
+        chk.addEventListener('change', function() {
+            const card = document.getElementById(`checkcard-${this.value}`);
+            if (this.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+            updateRoute();
+        });
+    });
+
+    function updateRoute() {
+        const checkedList = document.querySelectorAll('.list-checkbox:checked');
+        
+        // 1. Calculate Yield
+        let totalYield = 0;
+        const waypoints = [L.latLng(receiverLat, receiverLng)];
+        const selectedIds = [];
+
+        checkedList.forEach(chk => {
+            totalYield += parseInt(chk.dataset.qty);
+            waypoints.push(L.latLng(parseFloat(chk.dataset.lat), parseFloat(chk.dataset.lng)));
+            selectedIds.push(chk.value);
+        });
+
+        document.getElementById('route-yield').textContent = `${totalYield} Servings`;
+
+        // Update Button State
+        if (selectedIds.length > 0) {
+            btnClaimRoute.disabled = false;
+        } else {
+            btnClaimRoute.disabled = true;
+        }
+
+        // 2. Update Map Routing
+        if (routingControl) {
+            map.removeControl(routingControl);
+            routingControl = null;
+        }
+
+        if (checkedList.length > 0) {
+            // Draw routing path
+            routingControl = L.Routing.control({
+                waypoints: waypoints,
+                router: L.Routing.osrmv1({
+                    serviceUrl: 'https://router.project-osrm.org/route/v1'
+                }),
+                lineOptions: {
+                    styles: [{ color: '#10b981', opacity: 0.85, weight: 6 }]
+                },
+                createMarker: function() { return null; }, // Hide default waypoint markers
+                show: false,
+                addWaypoints: false,
+                draggableWaypoints: false
+            }).addTo(map);
+
+            // Listen to route metrics
+            routingControl.on('routesfound', function(e) {
+                const routes = e.routes;
+                const summary = routes[0].summary;
+                const distKm = (summary.totalDistance / 1000).toFixed(1);
+                const timeMin = Math.round(summary.totalTime / 60);
+
+                document.getElementById('route-distance').textContent = `${distKm} km`;
+                document.getElementById('route-time').textContent = `${timeMin} mins`;
+            });
+        } else {
+            document.getElementById('route-distance').textContent = '0.0 km';
+            document.getElementById('route-time').textContent = '0 mins';
+        }
+    }
+
+    // Modal Trigger
+    const claimModal = new bootstrap.Modal(document.getElementById('claimModal'));
+    
+    btnClaimRoute.addEventListener('click', function() {
+        const checkedList = document.querySelectorAll('.list-checkbox:checked');
+        const selectedIds = [];
+        const foodNames = [];
+        let totalYield = 0;
+
+        checkedList.forEach(chk => {
+            selectedIds.push(chk.value);
+            foodNames.push(chk.nextElementSibling.textContent.trim());
+            totalYield += parseInt(chk.dataset.qty);
+        });
+
+        // Set hidden value and modal text
+        document.getElementById('modalFoodIds').value = selectedIds.join(',');
+        document.getElementById('modalRouteSummary').innerHTML = `
+            <strong>Claiming ${selectedIds.length} listings:</strong> ${foodNames.join(', ')}<br>
+            <strong>Total Yield portions:</strong> ${totalYield} servings
+        `;
+
+        claimModal.show();
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,886 @@
+{% extends 'donor/base.html' %}
+{% load static %}
+
+{% block title %}List Surplus Food | Donor Portal{% endblock %}
+
+{% block dashboard_content %}
+<!-- Include Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --brand-emerald-glow: rgba(16, 185, 129, 0.15);
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+    }
+
+    .donor-container {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        color: var(--text-main);
+    }
+
+    /* Premium visual style for cards */
+    .premium-card {
+        border-radius: 0.75rem;
+        border: 1px solid var(--border-color);
+        background: #ffffff;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .premium-card:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    .section-badge {
+        width: 28px;
+        height: 28px;
+        background-color: var(--brand-emerald-light);
+        color: var(--brand-emerald-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        font-weight: 800;
+        font-size: 0.8rem;
+    }
+
+    /* Text Inputs & Form Controls */
+    .form-control,
+    input[type="text"],
+    input[type="number"],
+    input[type="datetime-local"],
+    select,
+    textarea {
+        width: 100% !important;
+        display: block;
+        border-radius: 8px !important;
+        padding: 0.65rem 0.85rem !important;
+        border: 1.5px solid var(--border-color) !important;
+        color: var(--text-main) !important;
+        font-size: 0.9rem !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        background-color: #ffffff !important;
+    }
+    .form-control:focus,
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="datetime-local"]:focus,
+    select:focus,
+    textarea:focus {
+        border-color: var(--brand-emerald) !important;
+        box-shadow: 0 0 0 3px var(--brand-emerald-glow) !important;
+        outline: none !important;
+        background-color: #ffffff !important;
+    }
+
+    /* Dietary Option Cards */
+    .food-type-card {
+        border: 1.5px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        background: #ffffff;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .food-type-card:hover {
+        border-color: var(--brand-emerald);
+        background-color: var(--slate-50);
+    }
+
+    .food-type-card.active {
+        border-color: var(--brand-emerald) !important;
+        background-color: var(--brand-emerald-light) !important;
+    }
+
+    /* Top-right custom radio indicators */
+    .radio-indicator {
+        width: 18px;
+        height: 18px;
+        border: 1.5px solid var(--border-color);
+        border-radius: 50%;
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background-color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    .food-type-card.active .radio-indicator {
+        border-color: var(--brand-emerald);
+    }
+    .food-type-card.active .radio-indicator::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--brand-emerald);
+        display: block;
+    }
+
+    .food-type-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+        font-size: 1.15rem;
+    }
+
+    /* Stepper Container Styling */
+    .stepper-container {
+        border: 1.5px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        background-color: #ffffff;
+        max-width: 100%;
+        height: 44px;
+    }
+    .stepper-action {
+        background-color: #f8fafc;
+        border: none;
+        color: var(--brand-emerald);
+        font-size: 1.1rem;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .stepper-action:hover {
+        background-color: var(--brand-emerald-light);
+    }
+    #qty-decrement {
+        border-right: 1.5px solid var(--border-color);
+    }
+    #qty-increment {
+        border-left: 1.5px solid var(--border-color);
+    }
+    .stepper-container input {
+        border: none !important;
+        text-align: center;
+        font-weight: 700;
+        color: var(--text-main);
+        width: 100% !important;
+        height: 44px !important;
+        padding: 0 !important;
+        font-size: 1rem;
+    }
+    .stepper-container input:focus {
+        box-shadow: none !important;
+        background-color: #ffffff !important;
+        outline: none !important;
+    }
+
+    /* Map container styling */
+    .map-container {
+        height: 240px;
+        width: 100%;
+        z-index: 1;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+
+    .map-hint {
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Discard Draft button styling */
+    .btn-discard {
+        border: 1.5px solid var(--border-color);
+        background-color: #ffffff;
+        color: var(--text-muted);
+        border-radius: 50px;
+        padding: 0.4rem 1.1rem;
+        font-weight: 700;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        text-decoration: none;
+    }
+    .btn-discard:hover {
+        border-color: #fca5a5;
+        background-color: #fef2f2;
+        color: #b91c1c;
+    }
+
+    /* Location Verify Button */
+    .btn-verify {
+        background-color: #ffffff;
+        border: 1.5px solid var(--brand-emerald);
+        color: var(--brand-emerald);
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.45rem 1.1rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.5rem;
+    }
+    .btn-verify:hover {
+        background-color: var(--brand-emerald-light);
+        color: var(--brand-emerald-dark);
+    }
+
+    /* Search marker input */
+    .search-input-wrapper {
+        position: relative;
+    }
+    .search-marker-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--brand-emerald);
+        font-size: 1rem;
+        z-index: 10;
+    }
+    .search-input-wrapper input {
+        padding-left: 2.25rem !important;
+    }
+
+    /* Green Alert Box */
+    .info-alert {
+        background-color: #f0fdf4;
+        border-left: 4px solid var(--brand-emerald);
+        border-radius: 4px;
+        padding: 0.75rem 1rem;
+    }
+    .info-alert-icon {
+        color: var(--brand-emerald-dark);
+        font-size: 0.95rem;
+    }
+    .info-alert-text {
+        color: #166534;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    /* Dark Safety Code Card */
+    .safety-card {
+        background-color: #0b1329 !important;
+        border: none !important;
+        border-radius: 10px;
+        color: #ffffff;
+        padding: 1.25rem 1.5rem;
+    }
+    .safety-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.85rem;
+    }
+    .safety-list {
+        list-style: none;
+        padding-left: 0;
+        margin-bottom: 0;
+    }
+    .safety-list li {
+        display: flex;
+        align-items: start;
+        gap: 0.65rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.65rem;
+        color: #cbd5e1;
+    }
+    .safety-list li:last-child {
+        margin-bottom: 0;
+    }
+    .safety-list li i {
+        color: var(--brand-emerald);
+        margin-top: 2px;
+        font-size: 0.85rem;
+    }
+
+    /* Soft Green Pro Tip Card */
+    .pro-tip-card {
+        background-color: #ecfdf5 !important;
+        border: none !important;
+        border-radius: 10px;
+        padding: 1.25rem;
+    }
+    .pro-tip-title {
+        color: #065f46;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 0.4rem;
+    }
+    .pro-tip-text {
+        color: #047857;
+        font-size: 0.78rem;
+        text-align: center;
+        margin-bottom: 0;
+        line-height: 1.4;
+    }
+
+    /* Bottom Publish Banner Button */
+    .publish-banner-btn {
+        background-color: var(--brand-emerald);
+        border: none;
+        border-radius: 8px;
+        width: 100%;
+        padding: 1rem;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.65rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .publish-banner-btn:hover {
+        background-color: var(--brand-emerald-dark);
+        box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+        transform: translateY(-1px);
+    }
+    .publish-banner-btn:active {
+        transform: translateY(0);
+    }
+    .publish-banner-btn .dots-decor {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 60px;
+        height: 24px;
+        opacity: 0.35;
+        pointer-events: none;
+    }
+    .publish-banner-btn .dots-decor.left {
+        left: 20px;
+    }
+    .publish-banner-btn .dots-decor.right {
+        right: 20px;
+    }
+    .dots-decor-grid {
+        background-image: radial-gradient(rgba(255, 255, 255, 0.8) 1.2px, transparent 1.2px);
+        background-size: 5px 5px;
+        width: 100%;
+        height: 100%;
+    }
+
+    .hover-emerald:hover {
+        color: var(--brand-emerald) !important;
+    }
+</style>
+
+<div class="donor-container container-fluid px-md-5">
+    <!-- Breadcrumb & Navigation Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-8">
+            <div class="d-flex align-items-center gap-1 extra-small fw-bold text-uppercase mb-2 text-muted" style="letter-spacing: 0.05em; font-size: 0.72rem;">
+                <a href="{% url 'donor:dashboard' %}" class="text-muted text-decoration-none hover-emerald">Donor Portal</a>
+                <span class="mx-1 text-muted opacity-50">›</span>
+                <span class="text-emerald" style="color: var(--brand-emerald);">New Surplus Listing</span>
+            </div>
+            <h1 class="h3 fw-bold text-dark mb-1">Create Food Listing</h1>
+            <p class="text-muted mb-0 small">Publish your surplus food to the EcoEats network for redistribution.</p>
+        </div>
+        <div class="col-4 text-end">
+            <a href="{% url 'donor:dashboard' %}" class="btn-discard">
+                <i class="fas fa-times text-danger"></i> Discard Draft
+            </a>
+        </div>
+    </div>
+
+    <form method="post" id="listingForm">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-danger mb-4 rounded-3 border-0 shadow-sm">
+            <h6 class="alert-heading fw-bold d-flex align-items-center gap-2 mb-2">
+                <i class="fas fa-exclamation-triangle"></i> Review Submission Details:
+            </h6>
+            <ul class="mb-0 small">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Left Column: Form Cards (width: 7) -->
+            <div class="col-lg-7 d-flex flex-column gap-4">
+                
+                <!-- Food Details Card -->
+                <div class="card premium-card border-0">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <span class="section-badge me-3">01</span>
+                            <h5 class="fw-bold mb-0 text-uppercase small" style="letter-spacing: 0.05em; color: var(--slate-800);">Food Item Details</h5>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Food Name / Description</label>
+                                <div class="input-group">
+                                    {{ form.food_name }}
+                                </div>
+                                <div class="form-text extra-small text-muted mt-2">Examples: "10 Trays of Steamed Rice", "20 Veggie Wraps"</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Dietary Type</label>
+                                <!-- Hidden original select field for Django backend -->
+                                <div style="display: none;">
+                                    {{ form.food_type }}
+                                </div>
+                                <!-- Interactive card selectors -->
+                                <div class="row g-3" id="food-type-cards">
+                                    <div class="col-6">
+                                        <div class="food-type-card" id="card-veg" data-value="veg">
+                                            <div class="radio-indicator"></div>
+                                            <div class="food-type-icon bg-emerald-light text-emerald">
+                                                <i class="fas fa-leaf"></i>
+                                            </div>
+                                            <div class="fw-bold text-dark small mb-1">Vegetarian</div>
+                                            <div class="extra-small text-muted">Plant-based</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="food-type-card" id="card-nonveg" data-value="non-veg">
+                                            <div class="radio-indicator"></div>
+                                            <div class="food-type-icon text-danger" style="background-color: #fee2e2 !important;">
+                                                <i class="fas fa-drumstick-bite"></i>
+                                            </div>
+                                            <div class="fw-bold text-dark small mb-1">Non-Veg</div>
+                                            <div class="extra-small text-muted">Contains meat/egg</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Quantity (Servings/Kg)</label>
+                                <div class="stepper-container">
+                                    <button type="button" class="stepper-action" id="qty-decrement"><i class="fas fa-minus"></i></button>
+                                    {{ form.quantity }}
+                                    <button type="button" class="stepper-action" id="qty-increment"><i class="fas fa-plus"></i></button>
+                                </div>
+                                <div class="form-text extra-small text-muted mt-2">Adjust quantity using buttons or manual input.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Safety & Timings Card -->
+                <div class="card premium-card border-0">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <span class="section-badge me-3">02</span>
+                            <h5 class="fw-bold mb-0 text-uppercase small" style="letter-spacing: 0.05em; color: var(--slate-800);">Safety & Timings</h5>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Time Prepared</label>
+                                <div class="input-group">
+                                    {{ form.prepared_time }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Expiry / Use By</label>
+                                <div class="input-group">
+                                    {{ form.expiry_time }}
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Special Instructions</label>
+                                {{ form.notes }}
+                                <div class="info-alert mt-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-info-circle info-alert-icon"></i>
+                                        <span class="info-alert-text">Mention allergens (nuts, dairy, soy), packaging details, or building entry protocols.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Map, Verification & Guidelines (width: 5) -->
+            <div class="col-lg-5 d-flex flex-column gap-4">
+                
+                <!-- Location verification Card -->
+                <div class="card premium-card border-0">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <span class="section-badge me-3">03</span>
+                            <h5 class="fw-bold mb-0 text-uppercase small" style="letter-spacing: 0.05em; color: var(--slate-800);">Pickup Location</h5>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Search Address</label>
+                            <div class="search-input-wrapper">
+                                <span class="search-marker-icon"><i class="fas fa-map-marker-alt"></i></span>
+                                <input type="text" id="address-input" class="form-control" placeholder="Enter pickup address (e.g. 123 Main St, City)" required>
+                            </div>
+                            <button type="button" id="geocode-btn" class="btn btn-verify">
+                                <i class="fas fa-search"></i> Verify
+                            </button>
+                        </div>
+
+                        <!-- Map container -->
+                        <div class="mb-3">
+                            <div class="map-container" id="leaflet-map"></div>
+                            <div class="map-hint mt-2">
+                                <i class="fas fa-map-marker-alt text-emerald me-1"></i>
+                                Drag the marker pin to adjust your precise physical location.
+                            </div>
+                        </div>
+
+                        <!-- Verified Feedback Box -->
+                        <div id="location-display" class="location-display" style="display: none;">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="fas fa-check-circle text-success mt-1" style="font-size: 1.1rem;"></i>
+                                <div>
+                                    <strong class="text-success small">Verified Address:</strong>
+                                    <div id="selected-address" class="text-dark extra-small mt-1"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Error Feedback Box -->
+                        <div id="location-error" class="alert alert-warning small mt-2 rounded-3 border-0 shadow-sm" style="display: none;">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <span id="error-message">Unable to verify address. Please search or select on the map.</span>
+                        </div>
+
+                        <!-- Hidden coordinates fields -->
+                        <input type="hidden" name="latitude" id="latitude" value="{{ request.POST.latitude }}">
+                        <input type="hidden" name="longitude" id="longitude" value="{{ request.POST.longitude }}">
+                        <input type="hidden" name="pickup_location" id="pickup_location" value="{{ request.POST.pickup_location }}">
+                    </div>
+                </div>
+
+                <!-- Donor Guidelines Card (Dark) -->
+                <div class="card safety-card">
+                    <div class="safety-title">
+                        <i class="fas fa-shield-alt text-emerald"></i>
+                        <span>Donor Safety Code</span>
+                    </div>
+                    <ul class="safety-list">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Keep food at correct temperatures (hot/cold) until the receiver collects it.</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Report exact preparation and expiration date/times.</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Pack food in clean, leakproof containers for transit.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Sustainability Tip Card -->
+                <div class="pro-tip-card">
+                    <div class="pro-tip-title">
+                        <i class="fas fa-seedling"></i>
+                        <span>Pro Tip</span>
+                    </div>
+                    <p class="pro-tip-text">
+                        Adding clear details like elevator access or gate codes speeds up pickup times by 40%.
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Bottom Publish Banner Button (Full Width) -->
+            <div class="col-12 mt-4 mb-5">
+                <button type="submit" class="publish-banner-btn">
+                    <div class="dots-decor left">
+                        <div class="dots-decor-grid"></div>
+                    </div>
+                    <i class="fas fa-paper-plane"></i> Publish Food Listing
+                    <div class="dots-decor right">
+                        <div class="dots-decor-grid"></div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ----------------- Inject placeholders and classes for Django inputs -----------------
+    const foodNameField = document.getElementById('id_food_name');
+    if (foodNameField) {
+        foodNameField.classList.add('form-control');
+        foodNameField.setAttribute('placeholder', 'Enter food name or description');
+    }
+
+    const quantityField = document.getElementById('id_quantity');
+    if (quantityField) {
+        quantityField.classList.add('form-control', 'text-center');
+        quantityField.setAttribute('placeholder', '0');
+    }
+
+    const preparedTimeField = document.getElementById('id_prepared_time');
+    if (preparedTimeField) {
+        preparedTimeField.classList.add('form-control');
+    }
+
+    const expiryTimeField = document.getElementById('id_expiry_time');
+    if (expiryTimeField) {
+        expiryTimeField.classList.add('form-control');
+    }
+
+    const notesField = document.getElementById('id_notes');
+    if (notesField) {
+        notesField.classList.add('form-control');
+        notesField.setAttribute('placeholder', 'Enter any special instructions, handling notes, or other relevant details...');
+    }
+
+    // ----------------- Food Type Card Selector -----------------
+    const selectFoodType = document.getElementById('id_food_type');
+    const cardVeg = document.getElementById('card-veg');
+    const cardNonVeg = document.getElementById('card-nonveg');
+
+    function updateCardSelectorStates() {
+        const val = selectFoodType.value;
+        if (val === 'veg') {
+            cardVeg.classList.add('active');
+            cardNonVeg.classList.remove('active');
+        } else if (val === 'non-veg') {
+            cardNonVeg.classList.add('active');
+            cardVeg.classList.remove('active');
+        }
+    }
+
+    // Set initial card states on load
+    updateCardSelectorStates();
+
+    cardVeg.addEventListener('click', function() {
+        selectFoodType.value = 'veg';
+        updateCardSelectorStates();
+    });
+
+    cardNonVeg.addEventListener('click', function() {
+        selectFoodType.value = 'non-veg';
+        updateCardSelectorStates();
+    });
+
+    // ----------------- Quantity Stepper Controls -----------------
+    const inputQty = document.getElementById('id_quantity');
+    const btnDec = document.getElementById('qty-decrement');
+    const btnInc = document.getElementById('qty-increment');
+
+    btnDec.addEventListener('click', function() {
+        let current = parseInt(inputQty.value) || 0;
+        if (current > 0) {
+            inputQty.value = current - 1;
+        }
+    });
+
+    btnInc.addEventListener('click', function() {
+        let current = parseInt(inputQty.value) || 0;
+        inputQty.value = current + 1;
+    });
+
+    // ----------------- Leaflet Interactive Map & Geocoding -----------------
+    // Set default coordinates (New Delhi) or use profile values if loaded
+    const defaultLat = parseFloat("{{ request.user.profile.latitude }}") || 28.6139;
+    const defaultLng = parseFloat("{{ request.user.profile.longitude }}") || 77.2090;
+
+    const map = L.map('leaflet-map').setView([defaultLat, defaultLng], 13);
+    
+    L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 22,
+        attribution: '© Google Maps'
+    }).addTo(map);
+
+    // Create draggable marker
+    const marker = L.marker([defaultLat, defaultLng], {
+        draggable: true
+    }).addTo(map);
+
+    // Load previously verified coordinates if they exist
+    const initialLat = parseFloat(document.getElementById('latitude').value);
+    const initialLng = parseFloat(document.getElementById('longitude').value);
+    const initialAddress = document.getElementById('pickup_location').value;
+
+    if (initialLat && initialLng) {
+        marker.setLatLng([initialLat, initialLng]);
+        map.setView([initialLat, initialLng], 15);
+        document.getElementById('address-input').value = initialAddress;
+        document.getElementById('selected-address').textContent = initialAddress;
+        document.getElementById('location-display').style.display = 'block';
+    } else {
+        // Otherwise set coordinate defaults
+        document.getElementById('latitude').value = defaultLat;
+        document.getElementById('longitude').value = defaultLng;
+    }
+
+    // Geocoding handler
+    const geocodeBtn = document.getElementById('geocode-btn');
+    const addressInput = document.getElementById('address-input');
+
+    geocodeBtn.addEventListener('click', function() {
+        const address = addressInput.value.trim();
+        if (!address) {
+            showError('Please enter an address first.');
+            return;
+        }
+
+        geocodeBtn.disabled = true;
+        geocodeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        geocodeAddress(address);
+    });
+
+    // Geocoding on pressing Enter
+    addressInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            geocodeBtn.click();
+        }
+    });
+
+    // Update coordinates and address when marker is dragged
+    marker.on('dragend', function() {
+        const pos = marker.getLatLng();
+        const lat = pos.lat;
+        const lng = pos.lng;
+
+        // Set form coordinates
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lng;
+
+        // Perform reverse geocoding to update text fields
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    const address = data.display_name;
+                    document.getElementById('pickup_location').value = address;
+                    document.getElementById('address-input').value = address;
+                    
+                    document.getElementById('selected-address').textContent = address;
+                    document.getElementById('location-display').style.display = 'block';
+                    document.getElementById('location-error').style.display = 'none';
+                }
+            })
+            .catch(err => {
+                console.error('Reverse geocoding error:', err);
+            });
+    });
+
+    async function geocodeAddress(address) {
+        try {
+            // Limits searches to India by default for this workspace
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=IN`);
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                const result = data[0];
+                const lat = parseFloat(result.lat);
+                const lng = parseFloat(result.lon);
+                const displayName = result.display_name;
+
+                // Set form coordinates and address
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lng;
+                document.getElementById('pickup_location').value = displayName;
+
+                // Move pin and fly to location
+                marker.setLatLng([lat, lng]);
+                map.setView([lat, lng], 15);
+
+                // Show success UI
+                document.getElementById('selected-address').textContent = displayName;
+                document.getElementById('location-display').style.display = 'block';
+                document.getElementById('location-error').style.display = 'none';
+            } else {
+                showError('Address not found. Please clarify details and try again.');
+            }
+        } catch (error) {
+            console.error('Geocoding error:', error);
+            showError('Location verification failed. Please try again later.');
+        } finally {
+            geocodeBtn.disabled = false;
+            geocodeBtn.innerHTML = '<i class="fas fa-search"></i> Verify';
+        }
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('location-error');
+        const errorMessage = document.getElementById('error-message');
+        errorMessage.textContent = message;
+        errorDiv.style.display = 'block';
+        document.getElementById('location-display').style.display = 'none';
+    }
+
+    // Form submit validation - require verified coordinates
+    document.getElementById('listingForm').addEventListener('submit', function(e) {
+        const lat = document.getElementById('latitude').value;
+        const lng = document.getElementById('longitude').value;
+
+        if (!lat || !lng) {
+            e.preventDefault();
+            showError('Please verify your pickup location before publishing.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

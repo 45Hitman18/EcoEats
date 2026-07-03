@@ -1,0 +1,356 @@
+{% extends 'donor/base.html' %}
+
+{% block title %}View Requests - {{ food.food_name }}{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    :root {
+        --brand-green: #10b981;
+        --brand-red: #ef4444;
+        --brand-yellow: #f59e0b;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .page-title {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
+    }
+
+    .requests-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
+
+    .request-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .request-card-body {
+        padding: 1.5rem;
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+    }
+
+    .status-pending {
+        background-color: var(--brand-yellow);
+        color: #92400e;
+    }
+
+    .status-approved {
+        background-color: var(--brand-green);
+        color: white;
+    }
+
+    .status-rejected {
+        background-color: var(--brand-red);
+        color: white;
+    }
+
+    .requester-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 1rem;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .detail-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+    }
+
+    .detail-value {
+        font-size: 0.9rem;
+        color: var(--text-main);
+        line-height: 1.4;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-approve, .btn-reject {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .btn-approve {
+        background-color: var(--brand-green);
+        color: white;
+        border: 1px solid var(--brand-green);
+    }
+
+    .btn-approve:hover {
+        background-color: #059669;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-reject {
+        background-color: var(--brand-red);
+        color: white;
+        border: 1px solid var(--brand-red);
+    }
+
+    .btn-reject:hover {
+        background-color: #dc2626;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-complete {
+        background-color: #3b82f6;
+        color: white;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        display: inline-block;
+        width: 100%;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .btn-complete:hover {
+        background-color: #2563eb;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .back-button {
+        margin-top: 2rem;
+        text-align: left;
+    }
+
+    .btn-back {
+        background-color: #6b7280;
+        color: white;
+        border: 1px solid #6b7280;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-back:hover {
+        background-color: #4b5563;
+        color: white;
+        border-color: #4b5563;
+    }
+
+    .no-requests {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+        font-size: 1.125rem;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.875rem;
+        }
+
+        .requests-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-approve, .btn-reject {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="page-header">
+        <h1 class="page-title">Requests for {{ food.food_name }}</h1>
+    </div>
+
+    {% if requests %}
+        <div class="requests-grid">
+            {% for request in requests %}
+                <div class="request-card">
+                    <div class="request-card-body">
+                        <div class="status-badge status-{{ request.status }}">
+                            {{ request.get_status_display }}
+                        </div>
+                        <div class="requester-name">
+                            Request by {{ request.requester.username }}
+                        </div>
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Requested At</div>
+                                <div class="detail-value">{{ request.requested_at|date:"M d, Y H:i" }}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Pickup Time</div>
+                                <div class="detail-value">{{ request.pickup_time|date:"M d, Y H:i" }}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Contact Person</div>
+                                <div class="detail-value">{{ request.contact_person }}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Contact Number</div>
+                                <div class="detail-value">{{ request.contact_number }}</div>
+                            </div>
+                            {% if request.vehicle_info %}
+                                <div class="detail-item">
+                                    <div class="detail-label">Vehicle Info</div>
+                                    <div class="detail-value">{{ request.vehicle_info }}</div>
+                                </div>
+                            {% endif %}
+                            {% if request.message %}
+                                <div class="detail-item" style="grid-column: 1 / -1;">
+                                    <div class="detail-label">Message</div>
+                                    <div class="detail-value">{{ request.message }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% if request.status == 'pending' %}
+                            <div class="action-buttons">
+                                <a href="{% url 'donor:approve_request' request.id %}" class="btn-approve">Approve</a>
+                                <a href="{% url 'donor:reject_request' request.id %}" class="btn-reject">Reject</a>
+                            </div>
+                        {% elif request.status == 'approved' %}
+                            <a href="{% url 'donor:complete_request' request.id %}" class="btn-complete">Mark Completed</a>
+                        {% elif request.status == 'completed' %}
+                            <div class="action-buttons">
+                                <button type="button" class="btn-reject" onclick="openReportModal({{ request.id }}, '{{ request.requester.username }}')">Report User</button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-requests">
+            No requests yet.
+        </div>
+    {% endif %}
+
+    <div class="back-button">
+        <a href="{% url 'donor:manage_food' %}" class="btn-back">Back to Manage Food</a>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div id="reportModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+    <div class="modal-content" style="background-color: white; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px;">
+        <span class="close" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+        <h3>Report User</h3>
+        <form id="reportForm" method="post" action="{% url 'donor:submit_report' %}">
+            {% csrf_token %}
+            <input type="hidden" name="request_id" id="reportRequestId">
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="reportText" style="display: block; margin-bottom: 5px; font-weight: bold;">Report Details:</label>
+                <textarea name="report_text" id="reportText" rows="6" placeholder="Please describe the issue with the receiver (e.g., inappropriate behavior, failure to pick up food, etc.)..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;" required></textarea>
+            </div>
+            <div style="text-align: right;">
+                <button type="button" class="btn-cancel" onclick="closeReportModal()" style="background-color: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Cancel</button>
+                <button type="submit" class="btn-submit" style="background-color: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Submit Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function updateRequestStatus(requestId, status) {
+    if (confirm('Are you sure you want to ' + status + ' this request?')) {
+        // Placeholder for AJAX request to update status
+        alert('Status updated to ' + status);
+        location.reload();
+    }
+}
+
+function openReportModal(requestId, username) {
+    document.getElementById('reportRequestId').value = requestId;
+    document.getElementById('reportText').placeholder = 'Please describe the issue with ' + username + ' (e.g., inappropriate behavior, failure to pick up food, etc.)...';
+    document.getElementById('reportModal').style.display = 'block';
+}
+
+function closeReportModal() {
+    document.getElementById('reportModal').style.display = 'none';
+    document.getElementById('reportForm').reset();
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    var modal = document.getElementById('reportModal');
+    if (event.target == modal) {
+        closeReportModal();
+    }
+}
+</script>
+{% endblock %}

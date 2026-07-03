@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Logistics Onboarding & Identity Verification | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --slate-bg: #f8fafc;
+        --blue-accent: #0284c7;
+        --blue-accent-light: #f0f9ff;
+    }
+
+    .onboarding-portal-section {
+        background-color: var(--slate-bg);
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        padding: 3rem 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    .onboarding-card {
+        background: #ffffff;
+        border-radius: 1.25rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .onboarding-header-gradient {
+        background: linear-gradient(135deg, var(--brand-emerald-dark) 0%, var(--brand-emerald) 100%);
+        padding: 2.25rem;
+        color: white;
+        text-align: center;
+    }
+
+    .form-group-custom {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-label-custom {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-slate);
+        letter-spacing: 0.05em;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .btn-submit-verification {
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        color: white !important;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 0.75rem;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.15);
+        transition: all 0.25s ease;
+    }
+
+    .btn-submit-verification:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.25);
+    }
+</style>
+
+<div class="onboarding-portal-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-md-9">
+                
+                <div class="card onboarding-card border-0">
+                    <!-- Onboarding Header Banner -->
+                    <div class="onboarding-header-gradient">
+                        <div class="d-inline-flex align-items-center justify-content-center mb-2 bg-white text-emerald rounded-circle shadow-sm" style="width: 52px; height: 52px; font-size: 1.5rem; color: var(--brand-emerald-dark);">
+                            <i class="fas fa-truck-fast"></i>
+                        </div>
+                        <h4 class="fw-extrabold mb-1">Volunteer Logistics Registration</h4>
+                        <p class="mb-0 opacity-90 small">Establish your vehicle profiles & identity verification documents to begin saving food.</p>
+                    </div>
+
+                    <!-- Onboarding Form Body -->
+                    <div class="card-body p-4 p-md-5">
+                        
+                        <div class="alert alert-warning border-0 bg-light-warning text-dark p-3 rounded-3 mb-4" style="font-size:0.78rem; line-height:1.45;">
+                            <div class="d-flex gap-2">
+                                <i class="fas fa-shield-halved text-warning mt-0.5" style="font-size:1rem;"></i>
+                                <div>
+                                    <strong>Onboarding Requirement:</strong> To prevent food theft and maintain food quality certifications, we verify driver documents (Aadhaar Card, Driving License PDF) before listing route requests.
+                                </div>
+                            </div>
+                        </div>
+
+                        <form method="post" enctype="multipart/form-data" novalidate>
+                            {% csrf_token %}
+
+                            <div class="row g-3">
+                                <!-- Vehicle Details Grid -->
+                                <div class="col-md-6 form-group-custom">
+                                    <label class="form-label-custom" for="{{ form.vehicle_name.id_for_label }}">{{ form.vehicle_name.label }}</label>
+                                    {{ form.vehicle_name }}
+                                    {% if form.vehicle_name.errors %}
+                                        <div class="text-danger extra-small mt-1">{% for error in form.vehicle_name.errors %}{{ error }}{% endfor %}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 form-group-custom">
+                                    <label class="form-label-custom" for="{{ form.vehicle_model.id_for_label }}">{{ form.vehicle_model.label }}</label>
+                                    {{ form.vehicle_model }}
+                                    {% if form.vehicle_model.errors %}
+                                        <div class="text-danger extra-small mt-1">{% for error in form.vehicle_model.errors %}{{ error }}{% endfor %}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-12 form-group-custom">
+                                    <label class="form-label-custom" for="{{ form.vehicle_number.id_for_label }}">{{ form.vehicle_number.label }}</label>
+                                    {{ form.vehicle_number }}
+                                    {% if form.vehicle_number.errors %}
+                                        <div class="text-danger extra-small mt-1">{% for error in form.vehicle_number.errors %}{{ error }}{% endfor %}</div>
+                                    {% endif %}
+                                </div>
+
+                                <hr class="my-4 text-muted opacity-10">
+
+                                <!-- Identity Details Grid -->
+                                <div class="col-12 form-group-custom">
+                                    <label class="form-label-custom" for="{{ form.aadhaar_card.id_for_label }}">{{ form.aadhaar_card.label }}</label>
+                                    {{ form.aadhaar_card }}
+                                    {% if form.aadhaar_card.errors %}
+                                        <div class="text-danger extra-small mt-1">{% for error in form.aadhaar_card.errors %}{{ error }}{% endfor %}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-12 form-group-custom">
+                                    <label class="form-label-custom" for="{{ form.license_document.id_for_label }}">{{ form.license_document.label }}</label>
+                                    {{ form.license_document }}
+                                    <div class="extra-small text-muted mt-1.5"><i class="fas fa-info-circle me-1"></i> Please upload a government issued driving license in <strong>PDF format</strong>.</div>
+                                    {% if form.license_document.errors %}
+                                        <div class="text-danger extra-small mt-1">{% for error in form.license_document.errors %}{{ error }}{% endfor %}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-submit-verification py-2.5 fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.82rem;">
+                                    Submit & Access Dispatch Center
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends 'donor/base.html' %}
+{% load static %}
+
+{% block title %}View Feedback | EcoEats{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --slate-bg: #f8fafc;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+    }
+
+    .feedback-wrapper {
+        background-color: var(--slate-bg);
+        min-height: calc(100vh - 160px);
+        padding-bottom: 3rem;
+    }
+
+    .feedback-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .feedback-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    }
+
+    .rating-star {
+        color: #f59e0b; /* Gold star color */
+    }
+
+    .avatar-circle-sm {
+        width: 38px;
+        height: 38px;
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        color: white;
+        font-weight: 700;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+
+    .food-badge {
+        background-color: var(--brand-emerald-light);
+        color: var(--brand-emerald-dark);
+        font-weight: 700;
+        font-size: 0.75rem;
+        border-radius: 6px;
+        padding: 0.25rem 0.5rem;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-back-dashboard {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        color: var(--text-main);
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 0.55rem 1rem;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+        text-decoration: none;
+    }
+
+    .btn-back-dashboard:hover {
+        background-color: #f8fafc;
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald-dark);
+    }
+</style>
+
+<div class="feedback-wrapper py-2">
+    <div class="container">
+        
+        <!-- Breadcrumb & Header -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb extra-small fw-bold text-uppercase mb-1" style="letter-spacing: 0.05em; font-size: 0.7rem;">
+                        <li class="breadcrumb-item"><span class="text-muted">Donor Portal</span></li>
+                        <li class="breadcrumb-item active text-emerald">Feedback received</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold text-dark mb-0">Feedback & Reviews</h1>
+            </div>
+            <div>
+                <a href="{% url 'donor:dashboard' %}" class="btn btn-back-dashboard d-inline-flex align-items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        {% if feedback_list %}
+            <div class="row g-4">
+                {% for feedback in feedback_list %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card feedback-card h-100 border-0">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <!-- Header: Avatar, Username, Date -->
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div class="d-flex align-items-center gap-2.5">
+                                            <div class="avatar-circle-sm">
+                                                {{ feedback.receiver.username|slice:":1"|upper }}
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold text-dark mb-0" style="font-size: 0.9rem;">@{{ feedback.receiver.username }}</h6>
+                                                <small class="text-muted extra-small" style="font-size: 0.68rem;">{{ feedback.created_at|date:"M d, Y" }}</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Stars -->
+                                        <div class="d-flex gap-0.5">
+                                            {% for i in "12345"|make_list %}
+                                                {% if i|add:"0" <= feedback.rating %}
+                                                    <i class="fas fa-star rating-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-muted"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Food Badge -->
+                                    <div class="mb-3">
+                                        <span class="food-badge">
+                                            <i class="fas fa-utensils me-1"></i> {{ feedback.food_request.food_listing.food_name }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Review Text -->
+                                    <p class="text-secondary small mb-0" style="line-height: 1.5; font-style: italic;">
+                                        "{{ feedback.feedback_text|default:"No written comments provided." }}"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="card border-0 rounded-4 shadow-sm py-5">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <span class="d-inline-flex align-items-center justify-content-center bg-light text-muted rounded-circle" style="width: 80px; height: 80px;">
+                            <i class="far fa-comments fa-3x"></i>
+                        </span>
+                    </div>
+                    <h4 class="fw-bold text-dark">No Feedback Yet</h4>
+                    <p class="text-muted small mx-auto mb-4" style="max-width: 320px;">You haven't received any feedback reviews from recipient partners yet. Completed donation requests will show up here once feedback is submitted.</p>
+                    <a href="{% url 'donor:dashboard' %}" class="btn btn-emerald px-4 py-2 fw-bold text-white text-uppercase" style="border-radius: 8px; font-size: 0.8rem; letter-spacing: 0.05em; background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%); border: none; text-decoration: none;">
+                        Go back to Dashboard
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

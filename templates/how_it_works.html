@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}How It Works | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --slate-900: #0f172a;
+        --slate-500: #64748b;
+        --border-color: #e2e8f0;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    /* How It Works Section */
+    .how-it-works-bg {
+        background-color: #0f5132;
+        padding: 3rem 0;
+    }
+
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .flow-section {
+        margin-bottom: 3rem;
+    }
+
+    .flow-heading {
+        font-size: 1.75rem;
+        font-weight: bold;
+        color: white;
+        margin-bottom: 1rem;
+        text-align: center;
+        line-height: 1.3;
+    }
+
+    .flow-link {
+        color: #d1fae5;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        display: block;
+        text-align: center;
+        font-size: 0.95rem;
+    }
+
+    .flow-link:hover {
+        text-decoration: underline;
+    }
+
+    .step-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    .step-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+
+    .step-label {
+        color: #10b981;
+        font-weight: 600;
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .step-title {
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+        line-height: 1.3;
+    }
+
+    .step-description {
+        color: #64748b;
+        line-height: 1.6;
+        font-size: 0.85rem;
+    }
+
+    .steps-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 0;
+    }
+
+    .steps-row .step-card {
+        min-height: 280px;
+    }
+
+    /* Laptop/Desktop (1024px and up) */
+    @media (min-width: 1024px) {
+        .how-it-works-bg {
+            padding: 4rem 0;
+        }
+
+        .flow-section {
+            margin-bottom: 4rem;
+        }
+
+        .flow-heading {
+            font-size: 1.85rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .flow-link {
+            font-size: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .step-card {
+            padding: 2rem;
+        }
+
+        .step-title {
+            font-size: 1.25rem;
+        }
+
+        .step-description {
+            font-size: 0.9rem;
+        }
+
+        .steps-row {
+            gap: 2rem;
+        }
+
+        .steps-row .step-card {
+            min-height: 320px;
+        }
+    }
+
+    /* Tablet (768px to 1023px) */
+    @media (max-width: 1023px) {
+        .steps-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+
+        .flow-heading {
+            font-size: 1.5rem;
+        }
+
+        .step-card {
+            padding: 1.25rem;
+        }
+
+        .step-title {
+            font-size: 1rem;
+        }
+
+        .step-description {
+            font-size: 0.8rem;
+        }
+
+        .steps-row .step-card {
+            min-height: 260px;
+        }
+    }
+
+    /* Small Tablet (640px to 767px) */
+    @media (max-width: 767px) {
+        .how-it-works-bg {
+            padding: 2rem 0;
+        }
+
+        .content-wrapper {
+            padding: 0 0.75rem;
+        }
+
+        .flow-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .flow-heading {
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .flow-link {
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-card {
+            padding: 1rem;
+        }
+
+        .step-label {
+            font-size: 0.7rem;
+        }
+
+        .step-title {
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-description {
+            font-size: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .steps-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .steps-row .step-card {
+            min-height: 220px;
+        }
+    }
+
+    /* Mobile (up to 639px) */
+    @media (max-width: 639px) {
+        .how-it-works-bg {
+            padding: 1.5rem 0;
+        }
+
+        .content-wrapper {
+            padding: 0 0.75rem;
+        }
+
+        .flow-section {
+            margin-bottom: 2rem;
+        }
+
+        .flow-heading {
+            font-size: 1.15rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .flow-link {
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .step-card {
+            padding: 1rem;
+        }
+
+        .step-label {
+            font-size: 0.65rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .step-title {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-description {
+            font-size: 0.7rem;
+            line-height: 1.4;
+        }
+
+        .steps-row {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .steps-row .step-card {
+            min-height: auto;
+            min-height: 180px;
+        }
+    }
+</style>
+
+<section class="how-it-works-bg py-5">
+    <div class="content-wrapper">
+        <!-- Donate Food Flow -->
+        <div class="flow-section">
+            <h3 class="flow-heading">Donate Food: No Waste, All Impact</h3>
+            <a href="{% url 'accounts:register' %}" class="flow-link">Start sharing food → free account setup</a>
+            <div class="steps-row">
+                <div class="step-card">
+                    <div class="step-label">step 1</div>
+                    <div class="step-title">Create a Donor Account</div>
+                    <div class="step-description">Restaurants, retailers, caterers, farms, and schools can quickly join and turn surplus food into community support. Setup takes only a few minutes.</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-label">step 2</div>
+                    <div class="step-title">Post Your Donation</div>
+                    <div class="step-description">Donors list what food they have, quantity, type, pickup window, and handling needs.</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-label">step 3</div>
+                    <div class="step-title">Seamless Handoff</div>
+                    <div class="step-description">Verified nonprofits claim donations and coordinate pickup or delivery. Larger donations can be supported with volunteer drivers where available.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receive Food Flow -->
+        <div class="flow-section">
+            <h3 class="flow-heading">Get Food When and Where You Need It</h3>
+            <a href="{% url 'accounts:register' %}" class="flow-link">Start receiving donations → join our platform</a>
+            <div class="steps-row">
+                <div class="step-card">
+                    <div class="step-label">step 1</div>
+                    <div class="step-title">Quick Verification</div>
+                    <div class="step-description">Nonprofits provide basic verification details. Approval typically happens quickly.</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-label">step 2</div>
+                    <div class="step-title">Set Your Food Preferences</div>
+                    <div class="step-description">Organizations define what food they need and their storage capacity. The system matches them with relevant donations.</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-label">step 3</div>
+                    <div class="step-title">Claim & Collect</div>
+                    <div class="step-description">One-click claiming, pickup or delivery coordination, and real-time notifications.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

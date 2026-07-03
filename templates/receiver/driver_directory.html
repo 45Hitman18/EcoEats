@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Logistics Partners Directory | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --slate-bg: #f8fafc;
+        --blue-accent: #0284c7;
+        --blue-accent-light: #f0f9ff;
+    }
+
+    .directory-portal-section {
+        background-color: var(--slate-bg);
+        min-height: 92vh;
+        padding: 2.5rem 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Search bar stylings */
+    .search-bar-wrapper {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    .search-input-custom {
+        padding: 0.85rem 1.5rem 0.85rem 3rem;
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        background-color: #ffffff;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-slate);
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        width: 100%;
+    }
+    .search-input-custom:focus {
+        border-color: var(--brand-emerald);
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.05);
+        outline: none;
+    }
+    .search-icon-inside {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 1rem;
+    }
+
+    /* Driver Cards */
+    .driver-list-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    }
+    .driver-list-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.04);
+        border-color: var(--brand-emerald);
+    }
+
+    .driver-header-row {
+        padding: 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    .driver-avatar-circle {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        font-weight: 800;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(217, 119, 6, 0.15);
+    }
+
+    .driver-meta-info h5 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--text-slate);
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .driver-body-details {
+        padding: 1.5rem;
+        background-color: #fafbfc;
+    }
+
+    .vehicle-badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background-color: #f1f5f9;
+        border: 1px solid var(--border-color);
+        padding: 0.35rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        color: var(--text-slate);
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+    }
+
+    .specs-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+    .specs-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px dashed #f1f5f9;
+    }
+    .specs-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .specs-lbl {
+        color: var(--text-muted);
+    }
+    .specs-val {
+        font-weight: 600;
+        color: var(--text-slate);
+    }
+
+    .driver-actions-footer {
+        padding: 1.25rem 1.5rem;
+        background-color: #ffffff;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        gap: 0.75rem;
+    }
+</style>
+
+<div class="directory-portal-section">
+    <div class="container">
+        
+        <!-- Breadcrumbs & Header Title -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb extra-small fw-bold text-uppercase mb-1" style="letter-spacing: 0.05em; font-size: 0.7rem;">
+                        <li class="breadcrumb-item"><a href="{% url 'receiver:dashboard' %}" class="text-muted text-decoration-none">NGO Dashboard</a></li>
+                        <li class="breadcrumb-item active text-emerald">Logistics Directory</li>
+                    </ol>
+                </nav>
+                <h2 class="fw-extrabold text-dark mb-0" style="font-size:1.65rem;">Volunteer Logistics Directory</h2>
+                <p class="text-muted small mb-0 mt-1">Browse active volunteer drivers to assist with picking up and delivering your claimed food surplus.</p>
+            </div>
+            <div>
+                <a href="{% url 'receiver:dashboard' %}" class="btn btn-sm btn-outline-secondary border rounded-3 px-3 py-1.5 extra-small fw-bold shadow-sm" style="font-size:0.72rem; background: #ffffff; color: var(--text-slate);">
+                    <i class="fas fa-arrow-left me-1.5"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <!-- Main Workspace: Search Bar and Driver Card Grid (Full Width) -->
+            <div class="col-12">
+                
+                <!-- Search input box -->
+                <div class="search-bar-wrapper">
+                    <i class="fas fa-magnifying-glass search-icon-inside"></i>
+                    <input type="text" id="driverSearch" class="search-input-custom" placeholder="Search volunteer driver by name, vehicle model, or license plate...">
+                </div>
+
+                <div class="row g-4" id="driversGrid">
+                    {% if drivers %}
+                        {% for driver in drivers %}
+                            <div class="col-12 col-md-6 col-lg-4 driver-card-wrapper" data-name="{{ driver.user.username|lower }}" data-vehicle="{{ driver.vehicle_name|lower }} {{ driver.vehicle_model|lower }} {{ driver.vehicle_number|lower }}">
+                                <div class="driver-list-card">
+                                    
+                                    <!-- Card Header -->
+                                    <div class="driver-header-row">
+                                        <div class="driver-avatar-circle">
+                                            {{ driver.user.username|first|upper }}
+                                        </div>
+                                        <div class="driver-meta-info">
+                                            <h5>
+                                                {{ driver.user.username }} 
+                                                <i class="fas fa-circle-check text-success" style="font-size:0.85rem;" title="Identity & License Verified"></i>
+                                            </h5>
+                                            <span class="badge bg-emerald-light text-emerald-dark border fw-bold extra-small mt-1" style="font-size:0.62rem; padding: 0.15rem 0.5rem;">
+                                                Onboarded Volunteer
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card details specs -->
+                                    <div class="driver-body-details">
+                                        <div class="vehicle-badge-pill">
+                                            <i class="fas fa-truck-fast text-emerald"></i> {{ driver.vehicle_name }} {{ driver.vehicle_model }}
+                                        </div>
+                                        
+                                        <div class="specs-grid">
+                                            <div class="specs-item">
+                                                <span class="specs-lbl">Plate Registration</span>
+                                                <span class="specs-val">{{ driver.vehicle_number }}</span>
+                                            </div>
+                                            <div class="specs-item">
+                                                <span class="specs-lbl">Location Base</span>
+                                                <span class="specs-val"><i class="fas fa-location-dot text-danger me-0.5"></i> {{ driver.location }}</span>
+                                            </div>
+                                            <div class="specs-item">
+                                                <span class="specs-lbl">Identity Verification</span>
+                                                <span class="specs-val text-success"><i class="fas fa-file-shield me-0.5"></i> Verified License</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Actions Footer -->
+                                    <div class="driver-actions-footer">
+                                        <a href="{% url 'chat:chat' driver.user.id %}" class="btn btn-sm btn-outline-secondary border rounded-3 w-50 py-2 extra-small fw-bold" style="font-size:0.75rem; background:#ffffff; color: var(--text-slate);">
+                                            <i class="fas fa-comment-dots text-emerald me-1"></i> Contact Driver
+                                        </a>
+                                        
+                                        {% if eligible_requests %}
+                                            <button class="btn btn-sm btn-emerald w-50 py-2 text-white border-0 fw-bold rounded-3" style="background: var(--brand-emerald-dark); font-size:0.75rem;" onclick="openAssignModal('{{ driver.user.id }}', '{{ driver.user.username }}')">
+                                                <i class="fas fa-hand-holding-hand me-1"></i> Request Delivery
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-light border rounded-3 text-muted w-50 py-2 extra-small fw-bold" style="font-size:0.75rem;" disabled title="No approved requests needing logistics support.">
+                                                <i class="fas fa-ban me-1"></i> No Tasks
+                                            </button>
+                                        {% endif %}
+                                    </div>
+
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12 text-center py-5 bg-white rounded-4 border">
+                            <i class="fas fa-user-slash text-muted fa-3x mb-3 opacity-30"></i>
+                            <h5 class="fw-bold text-slate">No Logistics Partners Online</h5>
+                            <p class="text-muted extra-small mb-0" style="max-width: 320px; margin: 0 auto; line-height: 1.4;">There are currently no verified volunteer logistics drivers onboarded in your redistribution zone.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Task Assignment Modal -->
+<div class="modal fade" id="assignTaskModal" tabindex="-1" aria-labelledby="assignTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="post" action="{% url 'receiver:driver_directory' %}">
+                {% csrf_token %}
+                <div class="modal-header border-bottom-0 pb-0 mt-2 px-4">
+                    <h5 class="modal-title fw-extrabold text-dark" id="assignTaskModalLabel">Dispatch Pickup Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" name="driver_id" id="modalDriverId">
+                    <p class="text-muted small mb-4">Request volunteer driver <strong class="text-emerald" id="modalDriverName"></strong> specifically to transport one of your approved food claims.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Select Claimed Food Item</label>
+                        <select name="request_id" class="form-select rounded-3" required style="font-size:0.85rem;">
+                            <option value="" disabled selected>-- Select Approved Request --</option>
+                            {% for req in eligible_requests %}
+                                <option value="{{ req.id }}">{{ req.food_listing.food_name }} ({{ req.food_listing.quantity }} kg) from {{ req.food_listing.donor.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 px-4 mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-success px-4" style="background-color: var(--brand-emerald-dark); border: none;">Send Direct Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Javascript search filter controls -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const driverSearch = document.getElementById('driverSearch');
+    if (driverSearch) {
+        driverSearch.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.driver-card-wrapper');
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                const vehicle = card.getAttribute('data-vehicle');
+                if (name.includes(query) || vehicle.includes(query)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+});
+
+function openAssignModal(driverId, driverName) {
+    document.getElementById('modalDriverId').value = driverId;
+    document.getElementById('modalDriverName').innerText = driverName;
+    const myModal = new bootstrap.Modal(document.getElementById('assignTaskModal'));
+    myModal.show();
+}
+</script>
+{% endblock %}

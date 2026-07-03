@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Public Leaderboard | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --border-color: #e2e8f0;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+    }
+
+    .leaderboard-section {
+        background-color: var(--slate-50);
+        min-height: calc(100vh - 140px);
+        padding: 3rem 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* SpotLight Card */
+    .spotlight-card {
+        border-radius: 1.25rem;
+        background: linear-gradient(135deg, var(--slate-900) 0%, #1e293b 100%);
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
+    }
+    
+    .spotlight-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+        z-index: 1;
+    }
+
+    .champion-avatar {
+        width: 72px;
+        height: 72px;
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        color: white;
+        font-weight: 800;
+        font-size: 1.75rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        border: 3px solid #ffffff;
+    }
+
+    /* Leaderboard panel styling */
+    .leader-card {
+        border-radius: 1rem;
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+    }
+
+    /* Leader item row */
+    .leader-item {
+        padding: 0.95rem 1.25rem;
+        border-bottom: 1px solid var(--slate-100);
+        display: flex;
+        align-items: center;
+        transition: background-color 0.15s ease;
+    }
+    .leader-item:last-child {
+        border-bottom: none;
+    }
+    .leader-item:hover {
+        background-color: var(--slate-50);
+    }
+
+    .rank-number {
+        font-weight: 800;
+        font-size: 1.1rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .rank-1 { background-color: #fef3c7; color: #d97706; }
+    .rank-2 { background-color: #f1f5f9; color: #475569; }
+    .rank-3 { background-color: #ffedd5; color: #ea580c; }
+    .rank-other { background-color: transparent; color: var(--text-muted); }
+
+    /* Custom tabs styling */
+    .nav-pills-emerald .nav-link {
+        color: var(--text-muted);
+        font-weight: 700;
+        border-radius: 50px;
+        padding: 0.45rem 1.25rem;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+    .nav-pills-emerald .nav-link.active {
+        background-color: var(--brand-emerald);
+        color: white !important;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.15);
+    }
+
+    /* Dynamic milestone badge styling */
+    .leader-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+    }
+
+    .score-highlight {
+        font-weight: 800;
+        color: var(--brand-emerald-dark);
+        font-size: 1rem;
+    }
+</style>
+
+<section class="leaderboard-section">
+    <div class="container py-2">
+        
+        <!-- Header -->
+        <div class="text-center mb-5">
+            {% if user.is_authenticated %}
+            <div class="mb-3">
+                <a href="{% url 'accounts:dashboard' %}" class="btn btn-white btn-sm border px-3 fw-bold text-muted shadow-sm rounded-pill" style="font-size: 0.85rem; border-color: var(--border-color) !important;">
+                    <i class="fas fa-arrow-left me-1.5"></i> Back to Dashboard
+                </a>
+            </div>
+            {% endif %}
+            <h1 class="h2 fw-bold text-dark mb-2">EcoEats Leaderboard</h1>
+            <p class="text-muted small mx-auto" style="max-width: 500px;">Celebrating our zero-waste community partners and their food distribution milestones.</p>
+            
+            <!-- Tab controllers -->
+            <div class="d-inline-flex bg-white p-1 border rounded-pill shadow-sm mt-3 nav nav-pills nav-pills-emerald" id="leaderboardTabs" role="tablist">
+                <button class="nav-link active border-0" id="month-tab" data-bs-toggle="pill" data-bs-target="#month-pane" type="button" role="tab">This Month</button>
+                <button class="nav-link border-0" id="alltime-tab" data-bs-toggle="pill" data-bs-target="#alltime-pane" type="button" role="tab">All Time</button>
+            </div>
+        </div>
+
+        <!-- Weekly Champion Spotlight -->
+        {% if featured_champion %}
+        <div class="card spotlight-card border-0 p-4 p-md-5 mb-5">
+            <div class="row align-items-center position-relative" style="z-index: 2;">
+                <div class="col-md-8 d-flex align-items-center gap-4 flex-wrap flex-md-nowrap text-center text-md-start justify-content-center justify-content-md-start">
+                    <div class="champion-avatar">
+                        {{ featured_champion.user.username|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <span class="badge bg-emerald text-white px-2.5 py-1 rounded mb-2 fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em; background-color: var(--brand-emerald);">Featured Champion</span>
+                        <h3 class="fw-bold text-white mb-1">{{ featured_champion.user.first_name }} {{ featured_champion.user.last_name|default:'' }}</h3>
+                        <p class="small text-light opacity-75 mb-0" style="max-width: 480px;">
+                            "We've reduced kitchen waste and supported local families by distributing {{ featured_champion.weekly_score }} servings of surplus food."
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center text-md-end mt-4 mt-md-0">
+                    <div class="d-inline-block text-start p-3 bg-white bg-opacity-10 border border-white border-opacity-10 rounded-3">
+                        <div class="extra-small text-light opacity-75 text-uppercase fw-bold" style="letter-spacing: 0.05em;">Community Yield</div>
+                        <strong class="h4 text-white m-0 d-block mt-0.5">{{ featured_champion.weekly_score }} Servings</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tab contents -->
+        <div class="tab-content" id="leaderboardTabContent">
+            
+            <!-- Month Pane -->
+            <div class="tab-pane fade show active" id="month-pane" role="tabpanel" tabindex="0">
+                <div class="row g-4">
+                    <!-- Top Donors -->
+                    <div class="col-lg-6">
+                        <div class="card leader-card border-0 p-4">
+                            <h5 class="fw-bold text-dark mb-4">
+                                <i class="fas fa-medal text-warning me-1.5"></i> Top Donors (This Month)
+                            </h5>
+                            
+                            <div class="d-flex flex-column">
+                                {% if donors_month %}
+                                    {% for leader in donors_month %}
+                                    <div class="leader-item">
+                                        <div class="rank-number {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+                                            {{ forloop.counter }}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <span class="fw-bold text-dark small">{{ leader.profile.user.first_name }} {{ leader.profile.user.last_name|default:'' }}</span>
+                                                {% if leader.badges %}
+                                                    {% for badge in leader.badges|slice:":1" %}
+                                                    <span class="leader-badge {{ badge.color }}">
+                                                        <i class="fas {{ badge.icon }}"></i> {{ badge.name }}
+                                                    </span>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                            <div class="extra-small text-muted">@{{ leader.profile.user.username }}</div>
+                                        </div>
+                                        <div class="score-highlight">
+                                            {{ leader.score }} <span class="extra-small text-muted font-normal">kg saved</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-5 text-muted small">
+                                        <i class="fas fa-award fa-2x mb-2 text-light"></i>
+                                        <p class="mb-0">No donations logged yet this month.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Receivers -->
+                    <div class="col-lg-6">
+                        <div class="card leader-card border-0 p-4">
+                            <h5 class="fw-bold text-dark mb-4">
+                                <i class="fas fa-hand-holding-heart text-emerald me-1.5"></i> Top Receivers (This Month)
+                            </h5>
+                            
+                            <div class="d-flex flex-column">
+                                {% if receivers_month %}
+                                    {% for leader in receivers_month %}
+                                    <div class="leader-item">
+                                        <div class="rank-number {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+                                            {{ forloop.counter }}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <span class="fw-bold text-dark small">{{ leader.profile.user.first_name }} {{ leader.profile.user.last_name|default:'' }}</span>
+                                                {% if leader.badges %}
+                                                    {% for badge in leader.badges|slice:":1" %}
+                                                    <span class="leader-badge {{ badge.color }}">
+                                                        <i class="fas {{ badge.icon }}"></i> {{ badge.name }}
+                                                    </span>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                            <div class="extra-small text-muted">@{{ leader.profile.user.username }}</div>
+                                        </div>
+                                        <div class="score-highlight">
+                                            {{ leader.score }} <span class="extra-small text-muted font-normal">meals</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-5 text-muted small">
+                                        <i class="fas fa-hands-helping fa-2x mb-2 text-light"></i>
+                                        <p class="mb-0">No claims completed yet this month.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Time Pane -->
+            <div class="tab-pane fade" id="alltime-pane" role="tabpanel" tabindex="0">
+                <div class="row g-4">
+                    <!-- Top Donors (All Time) -->
+                    <div class="col-lg-6">
+                        <div class="card leader-card border-0 p-4">
+                            <h5 class="fw-bold text-dark mb-4">
+                                <i class="fas fa-medal text-warning me-1.5"></i> Top Donors (All Time)
+                            </h5>
+                            
+                            <div class="d-flex flex-column">
+                                {% if donors_alltime %}
+                                    {% for leader in donors_alltime %}
+                                    <div class="leader-item">
+                                        <div class="rank-number {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+                                            {{ forloop.counter }}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <span class="fw-bold text-dark small">{{ leader.profile.user.first_name }} {{ leader.profile.user.last_name|default:'' }}</span>
+                                                {% if leader.badges %}
+                                                    {% for badge in leader.badges %}
+                                                    <span class="leader-badge {{ badge.color }}">
+                                                        <i class="fas {{ badge.icon }}"></i> {{ badge.name }}
+                                                    </span>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                            <div class="extra-small text-muted">@{{ leader.profile.user.username }}</div>
+                                        </div>
+                                        <div class="score-highlight">
+                                            {{ leader.score }} <span class="extra-small text-muted font-normal">kg saved</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-5 text-muted small">
+                                        <i class="fas fa-award fa-2x mb-2 text-light"></i>
+                                        <p class="mb-0">No donations logged yet.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Receivers (All Time) -->
+                    <div class="col-lg-6">
+                        <div class="card leader-card border-0 p-4">
+                            <h5 class="fw-bold text-dark mb-4">
+                                <i class="fas fa-hand-holding-heart text-emerald me-1.5"></i> Top Receivers (All Time)
+                            </h5>
+                            
+                            <div class="d-flex flex-column">
+                                {% if receivers_alltime %}
+                                    {% for leader in receivers_alltime %}
+                                    <div class="leader-item">
+                                        <div class="rank-number {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+                                            {{ forloop.counter }}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <span class="fw-bold text-dark small">{{ leader.profile.user.first_name }} {{ leader.profile.user.last_name|default:'' }}</span>
+                                                {% if leader.badges %}
+                                                    {% for badge in leader.badges %}
+                                                    <span class="leader-badge {{ badge.color }}">
+                                                        <i class="fas {{ badge.icon }}"></i> {{ badge.name }}
+                                                    </span>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                            <div class="extra-small text-muted">@{{ leader.profile.user.username }}</div>
+                                        </div>
+                                        <div class="score-highlight">
+                                            {{ leader.score }} <span class="extra-small text-muted font-normal">meals</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-5 text-muted small">
+                                        <i class="fas fa-hands-helping fa-2x mb-2 text-light"></i>
+                                        <p class="mb-0">No claims completed yet.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+{% endblock %}

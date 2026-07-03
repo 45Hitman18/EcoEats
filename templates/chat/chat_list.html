@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}EcoEats Inbox{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --wa-bg: #eae6df;
+        --wa-message-sent: #d9fdd3;
+        --wa-message-received: #ffffff;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --slate-bg: #f8fafc;
+    }
+
+    .inbox-portal-section {
+        background-color: #f0f2f5;
+        min-height: 92vh;
+        display: flex;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Split Screen Layout */
+    .chat-layout-wrapper {
+        width: 100%;
+        max-width: 1400px;
+        margin: 1.5rem auto;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.04);
+        display: flex;
+        overflow: hidden;
+        height: 82vh;
+    }
+
+    /* Left Sidebar: Inbox User List */
+    .inbox-sidebar {
+        width: 380px;
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        background-color: #ffffff;
+        flex-shrink: 0;
+    }
+
+    .sidebar-header {
+        padding: 1rem 1.25rem;
+        background-color: var(--slate-bg);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .search-box-container {
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        background-color: #ffffff;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+    }
+
+    .search-input-wrapper i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.5rem 1rem 0.5rem 2.25rem;
+        background-color: var(--slate-bg);
+        border: 1.5px solid transparent;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        border-color: var(--brand-emerald);
+        background-color: #ffffff;
+    }
+
+    .sidebar-user-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        padding: 0.9rem 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        text-decoration: none;
+        color: var(--text-slate);
+        transition: background-color 0.2s ease;
+    }
+
+    .contact-item:hover {
+        background-color: var(--slate-bg);
+    }
+
+    .contact-item.active {
+        background-color: var(--brand-emerald-light);
+    }
+
+    .contact-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        color: white;
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        margin-right: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .contact-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .contact-name-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.15rem;
+    }
+
+    .contact-name {
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: var(--text-slate);
+    }
+
+    .contact-time {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    .contact-preview-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .contact-preview {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-truncate: ellipsis;
+        max-width: 180px;
+    }
+
+    .unread-badge {
+        background-color: var(--brand-emerald);
+        color: white;
+        font-weight: 700;
+        font-size: 0.65rem;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+    }
+
+    /* Right Sidebar: Chat Workspace Panel */
+    .chat-workspace {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--slate-bg);
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 3rem;
+        position: relative;
+    }
+
+    .chat-splash-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--brand-emerald);
+        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-return-dashboard {
+        border: 1.5px solid var(--border-color);
+        background: #ffffff;
+        color: var(--text-slate) !important;
+        font-weight: 700;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        padding: 0.4rem 1rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    .btn-return-dashboard:hover {
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald-dark) !important;
+    }
+
+    /* Mobile Adaptations */
+    @media (max-width: 768px) {
+        .inbox-portal-section {
+            min-height: calc(100vh - 56px);
+        }
+        .chat-layout-wrapper {
+            margin: 0;
+            border-radius: 0;
+            border: none;
+            height: calc(100vh - 56px);
+        }
+        .chat-workspace {
+            display: none;
+        }
+        .inbox-sidebar {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="inbox-portal-section">
+    <div class="chat-layout-wrapper">
+        
+        <!-- Left Sidebar Contacts -->
+        <div class="inbox-sidebar">
+            <div class="sidebar-header">
+                <span class="fw-bold text-dark" style="font-size: 1rem;"><i class="fas fa-comments text-emerald me-1"></i> Chats</span>
+                <a href="{{ dashboard_url }}" class="btn-return-dashboard"><i class="fas fa-arrow-left me-1"></i> Back</a>
+            </div>
+
+            <!-- Search Contact List -->
+            <div class="search-box-container">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input type="text" id="contactSearch" class="search-input" placeholder="Search or start a new chat...">
+                </div>
+            </div>
+
+            <!-- User list loop -->
+            <div class="sidebar-user-list">
+                {% if chat_users %}
+                    {% for cu in chat_users %}
+                    <a href="{% url 'chat:chat' cu.user.id %}" class="contact-item contact-list-card-item" data-username="{{ cu.user.username|lower }}">
+                        <div class="contact-avatar">
+                            {{ cu.user.username|first|upper }}
+                        </div>
+                        <div class="contact-info">
+                            <div class="contact-name-row">
+                                <span class="contact-name">{{ cu.user.username }}</span>
+                                {% if cu.last_time %}
+                                <span class="contact-time">{{ cu.last_time|date:"g:i A" }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="contact-preview-row">
+                                <span class="contact-preview">{{ cu.last_message|default:"No messages yet" }}</span>
+                                {% if cu.unread_count %}
+                                <span class="unread-badge">{{ cu.unread_count }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users-slash text-muted fa-2x mb-2 opacity-50"></i>
+                        <p class="text-muted extra-small">No contacts available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Workspace: Default Splash Panel -->
+        <div class="chat-workspace">
+            <div class="chat-splash-icon">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <h4 class="fw-extrabold text-slate mb-2">EcoEats Messenger</h4>
+            <p class="text-muted extra-small mb-4" style="max-width: 360px; line-height: 1.5;">
+                Select a partner or coordinator from the left sidebar to start coordinating real-time surplus redistribution.
+            </p>
+            <span class="badge bg-light text-muted border px-3 py-2 rounded-pill fw-bold" style="font-size:0.68rem;">
+                <i class="fas fa-lock text-emerald me-1"></i> End-to-End Encrypted Coordination
+            </span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('contactSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            document.querySelectorAll('.contact-list-card-item').forEach(item => {
+                const username = item.getAttribute('data-username');
+                if (username.includes(query)) {
+                    item.style.setProperty('display', 'flex', 'important');
+                } else {
+                    item.style.setProperty('display', 'none', 'important');
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

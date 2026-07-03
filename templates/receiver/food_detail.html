@@ -1,0 +1,841 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ food.food_name }} | EcoEats{% endblock %}
+
+{% block content %}
+<!-- Include Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --slate-bg: #f8fafc;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+    }
+
+    .dashboard-wrapper {
+        background-color: var(--slate-bg);
+        min-height: 100vh;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Sticky Sidebar configuration */
+    @media (min-width: 992px) {
+        .sticky-sidebar {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 90px;
+            align-self: start;
+        }
+    }
+
+    /* Premium Hero Header */
+    .hero-header-card {
+        background: linear-gradient(135deg, var(--brand-emerald-dark) 0%, var(--brand-emerald) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+    }
+
+    .hero-header-card::before {
+        content: "";
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 70%);
+        top: -100px;
+        right: -100px;
+        border-radius: 50%;
+    }
+
+    .bg-success-light {
+        background-color: rgba(209, 250, 229, 0.9) !important;
+    }
+    .text-success-dark {
+        color: #065f46 !important;
+    }
+    .bg-danger-light {
+        background-color: rgba(254, 226, 226, 0.9) !important;
+    }
+    .text-danger-dark {
+        color: #991b1b !important;
+    }
+    .bg-warning-light {
+        background-color: rgba(254, 243, 199, 0.9) !important;
+    }
+    .text-warning-dark {
+        color: #92400e !important;
+    }
+    .bg-white-translucent {
+        background-color: rgba(255, 255, 255, 0.12) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.2s ease;
+    }
+    .bg-white-translucent:hover {
+        background-color: rgba(255, 255, 255, 0.22) !important;
+        transform: translateY(-1px);
+        color: white !important;
+    }
+    .text-emerald {
+        color: var(--brand-emerald) !important;
+    }
+    .fw-extrabold {
+        font-weight: 800;
+    }
+
+    /* Details Panel Card - Compact Professional Style */
+    .detail-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .spec-box {
+        background-color: #f8fafc;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid #f1f5f9;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .spec-box:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .icon-square {
+        width: 36px;
+        height: 36px;
+        background: #ffffff;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        color: var(--brand-emerald);
+        font-size: 0.9rem;
+    }
+
+    /* Clean Custom Vertical Timeline */
+    .timeline-container {
+        position: relative;
+        padding-left: 1.75rem;
+        border-left: 2px dashed var(--border-color);
+    }
+    .timeline-step {
+        position: relative;
+        padding-bottom: 1.25rem;
+    }
+    .timeline-step:last-child {
+        padding-bottom: 0;
+    }
+    .timeline-icon {
+        position: absolute;
+        left: -2.5rem;
+        top: 2px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .timeline-step.done .timeline-icon {
+        border-color: var(--brand-emerald);
+        color: var(--brand-emerald);
+        background: var(--brand-emerald-light);
+    }
+    .timeline-step.danger .timeline-icon {
+        border-color: #ef4444;
+        color: #ef4444;
+        background: #fef2f2;
+    }
+    .timeline-content {
+        padding-left: 0.25rem;
+    }
+
+    /* Freshness / Safety Meter */
+    #mainTime {
+        font-size: 2.25rem; /* Reduced from 3.75rem to fit nicely */
+        letter-spacing: -1px;
+        line-height: 1.1;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    /* Donor Card */
+    .donor-profile-card {
+        background: linear-gradient(135deg, var(--brand-emerald-light) 0%, #d1fae5 100%);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        border: 1px solid rgba(16, 185, 129, 0.15);
+    }
+
+    .donor-avatar-lg {
+        width: 48px; /* Reduced from 60px */
+        height: 48px;
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        color: white;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.2rem;
+        box-shadow: 0 3px 6px rgba(16, 185, 129, 0.15);
+    }
+
+    /* Forms styling */
+    .form-label-custom {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+        letter-spacing: 0.03em;
+    }
+
+    #claimForm .form-control, input[type="text"], input[type="datetime-local"], textarea {
+        background-color: #ffffff !important;
+        border: 1.5px solid var(--border-color) !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.875rem !important;
+        color: var(--text-main) !important;
+        transition: all 0.2s ease !important;
+    }
+
+    #claimForm .form-control:focus, input:focus, textarea:focus {
+        background-color: white !important;
+        border-color: var(--brand-emerald) !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+        outline: none !important;
+    }
+
+    .btn-confirm {
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        color: white;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 0.75rem;
+        border: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 12px -3px rgba(16, 185, 129, 0.15);
+    }
+
+    .btn-confirm:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.25);
+        color: white;
+    }
+
+    /* Embedded Map styling */
+    .detail-map-container {
+        height: 200px; /* Reduced from 250px */
+        width: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1.5px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+    }
+
+    .extra-small {
+        font-size: 0.7rem;
+    }
+
+    /* Glassmorphic Fullscreen Map Overlay */
+    .map-fullscreen-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(15, 23, 42, 0.45) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 99999 !important;
+    }
+
+    .map-fullscreen-overlay #map-inner-container {
+        width: 75vw !important;
+        height: 75vh !important;
+        max-width: 1400px;
+        max-height: 900px;
+        position: relative !important;
+    }
+
+    .map-fullscreen-overlay #detail-map {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 20px !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+    }
+</style>
+
+<div class="dashboard-wrapper py-4">
+    <div class="container-fluid px-md-5">
+        
+        <!-- Premium Hero Header Block -->
+        <div class="hero-header-card mb-4 p-4 rounded-4 shadow-sm text-white animate-fade-in">
+            <div class="row align-items-center g-3">
+                <div class="col-md-8">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb extra-small fw-bold text-uppercase mb-2" style="letter-spacing: 0.08em; font-size: 0.7rem;">
+                            <li class="breadcrumb-item"><a href="{% url 'receiver:dashboard' %}" class="text-white opacity-75 text-decoration-none">Surplus Marketplace</a></li>
+                            <li class="breadcrumb-item active text-white fw-bold" aria-current="page">Listing Details</li>
+                        </ol>
+                    </nav>
+                    <h1 class="h2 fw-bold mb-1">{{ food.food_name }}</h1>
+                    <p class="text-white opacity-90 mb-2 extra-small d-flex align-items-center gap-2">
+                        <i class="fas fa-store-alt text-warning"></i> Donated by <strong class="text-warning">{{ food.donor.username }}</strong>
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if food.food_type == 'veg' %}
+                        <span class="badge bg-success-light text-success-dark px-2.5 py-1.5 rounded-pill fw-bold extra-small">
+                            <i class="fas fa-leaf me-1"></i> Vegetarian
+                        </span>
+                        {% else %}
+                        <span class="badge bg-danger-light text-danger-dark px-2.5 py-1.5 rounded-pill fw-bold extra-small">
+                            <i class="fas fa-drumstick-bite me-1"></i> Non-Vegetarian
+                        </span>
+                        {% endif %}
+                        <span class="badge bg-white-translucent text-white px-2.5 py-1.5 rounded-pill fw-bold extra-small">
+                            <i class="fas fa-boxes me-1"></i> {{ food.quantity }} Servings
+                        </span>
+                        <span class="badge bg-warning-light text-warning-dark px-2.5 py-1.5 rounded-pill fw-bold extra-small">
+                            <i class="fas fa-clock me-1"></i> Expires: {{ food.expiry_time|date:"M d, H:i" }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="d-flex flex-column align-items-md-end align-items-start gap-2">
+                        <a href="{% url 'receiver:dashboard' %}" class="btn btn-sm bg-white-translucent text-white border-0 px-3 py-1.5 rounded-3 text-decoration-none d-inline-flex align-items-center gap-1" style="font-size: 0.75rem; font-weight: 600;">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                        <div class="d-inline-block bg-white text-dark rounded-3 p-2.5 shadow-sm border border-light text-center" style="min-width: 110px;">
+                            <div class="text-muted extra-small text-uppercase fw-bold mb-0.5" style="letter-spacing: 0.05em; font-size: 0.6rem;">Listing ID</div>
+                            <h5 class="fw-extrabold text-emerald mb-0">#FL-{{ food.id|add:"4000" }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balanced & Compact Column Layout -->
+        <div class="row g-4">
+            
+            <!-- Left Column: Specs, Milestones, Map Location (Details) -->
+            <div class="col-lg-7 d-flex flex-column gap-4">
+                
+                <!-- Main Specifications & Milestones -->
+                <div class="card detail-card shadow-sm border-0">
+                    <div class="card-body p-3 p-md-4">
+                        <h6 class="text-muted fw-bold text-uppercase extra-small mb-3" style="letter-spacing: 0.05em;">Technical Specifications</h6>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <div class="spec-box d-flex align-items-center">
+                                    <div class="icon-square me-2 bg-emerald-light text-emerald">
+                                        <i class="fas fa-leaf"></i>
+                                    </div>
+                                    <div>
+                                        <div class="extra-small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Dietary Type</div>
+                                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">{{ food.get_food_type_display }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="spec-box d-flex align-items-center">
+                                    <div class="icon-square me-2 bg-primary-light text-primary" style="background-color: #eff6ff !important; color: #3b82f6 !important;">
+                                        <i class="fas fa-boxes"></i>
+                                    </div>
+                                    <div>
+                                        <div class="extra-small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Total Volume</div>
+                                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">{{ food.quantity }} Servings / Units</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Clean Vertical Timeline Milestones -->
+                        <div class="timeline-container mt-3 mb-2">
+                            <div class="timeline-step done">
+                                <div class="timeline-icon">
+                                    <i class="far fa-clock"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-0 text-dark fw-bold" style="font-size: 0.85rem;">Preparation Milestone</h6>
+                                    <p class="text-secondary mb-0 extra-small">Prepared on {{ food.prepared_time|date:"M d, Y" }} at <span class="fw-bold text-dark">{{ food.prepared_time|date:"H:i" }}</span></p>
+                                </div>
+                            </div>
+                            <div class="timeline-step danger">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-hourglass-end"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-0 text-danger fw-bold" style="font-size: 0.85rem;">Safety Expiry Milestone</h6>
+                                    <p class="text-secondary mb-0 extra-small">Expires on {{ food.expiry_time|date:"M d, Y" }} at <span class="fw-bold text-danger">{{ food.expiry_time|date:"H:i" }}</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Special Handling Instructions -->
+                        {% if food.notes %}
+                        <div class="mt-3 pt-2 border-top">
+                            <h6 class="text-muted fw-bold text-uppercase extra-small mb-2" style="letter-spacing: 0.05em;">Handling Instructions</h6>
+                            <div class="p-2 border rounded bg-light-soft" style="background-color: #fafbfc; border-style: dashed !important; border-color: var(--border-color) !important;">
+                                <p class="text-secondary mb-0 extra-small" style="line-height: 1.5; font-style: italic;">
+                                    "{{ food.notes }}"
+                                </p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Map Navigation Card -->
+                <div class="card detail-card shadow-sm border-0">
+                    <div class="card-body p-3 p-md-4">
+                        <h6 class="fw-bold text-uppercase extra-small text-muted mb-3" style="letter-spacing: 0.05em;">
+                            <i class="fas fa-map-marker-alt text-emerald me-1"></i>Pickup Location & Map
+                        </h6>
+                        <div class="mb-2">
+                            <div class="extra-small text-muted text-uppercase fw-bold mb-1">Pickup Address</div>
+                            <div class="small fw-bold text-dark" style="line-height: 1.4;">{{ food.pickup_location }}</div>
+                        </div>
+
+                        <!-- Proximity & Distance Badge -->
+                        {% if distance %}
+                        <div class="mb-2 p-2 rounded border" style="background-color: var(--brand-emerald-light); border-color: rgba(16, 185, 129, 0.15) !important;">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="icon-square text-success flex-shrink-0" style="background: white; border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                    <i class="fas fa-car-side" style="color: var(--brand-emerald); font-size: 0.8rem;"></i>
+                                </div>
+                                <div>
+                                    <div class="extra-small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Proximity & Logistics</div>
+                                    <div class="extra-small fw-bold text-dark">
+                                        <span class="text-emerald" style="color: var(--brand-emerald-dark) !important;">{{ distance }} km</span> away 
+                                        <span class="text-muted">• Est. {{ eta }} min drive</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Embedded Leaflet Map Container -->
+                        <div class="position-relative mb-2" style="height: 200px;" id="map-placeholder">
+                            <div id="map-inner-container" class="w-100 h-100 position-relative">
+                                <div class="detail-map-container h-100" id="detail-map"></div>
+                                <!-- Fullscreen Overlay Button -->
+                                <button id="map-fullscreen" class="btn btn-light btn-sm shadow-sm" style="position: absolute; top: 8px; right: 8px; z-index: 1000; border-radius: 6px; border: 1.5px solid var(--border-color); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; padding: 0;" type="button" title="View Fullscreen">
+                                    <i class="fas fa-expand" style="color: var(--text-muted); font-size: 12px;"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button id="get-directions" class="btn btn-outline-primary btn-sm w-100 py-1.5 extra-small" style="border-radius: 6px; font-weight: 600;">
+                                    <i class="fas fa-route me-1"></i>Directions
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button id="open-maps" class="btn btn-outline-secondary btn-sm w-100 py-1.5 extra-small" style="border-radius: 6px; border-color: var(--border-color); color: var(--text-muted); font-weight: 600;">
+                                    <i class="fas fa-external-link-alt me-1"></i>Open Maps
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Claim Form, Safety Meter, Donor Profile (Sticky Sidebar) -->
+            <div class="col-lg-5">
+                <div class="sticky-sidebar d-flex flex-column gap-4">
+                    
+                    <!-- Claim Form Card -->
+                    <div class="card detail-card shadow-sm border-0" style="border-top: 4px solid var(--brand-emerald) !important;">
+                        <div class="card-body p-3 p-md-4">
+                            {% if not has_requested %}
+                            <h5 class="fw-bold text-dark mb-3" style="font-size: 1.1rem;">Secure this Listing</h5>
+                            <form method="post" id="claimForm">
+                                {% csrf_token %}
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger p-2 extra-small mb-2">
+                                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="mb-2">
+                                    <label class="form-label-custom">Primary Contact Person</label>
+                                    <div class="d-flex flex-column">
+                                        {{ form.contact_person }}
+                                    </div>
+                                    {% if form.contact_person.errors %}
+                                    <div class="text-danger extra-small mt-1">
+                                        {% for error in form.contact_person.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label-custom">Contact Number</label>
+                                    <div class="d-flex flex-column">
+                                        {{ form.contact_number }}
+                                    </div>
+                                    {% if form.contact_number.errors %}
+                                    <div class="text-danger extra-small mt-1">
+                                        {% for error in form.contact_number.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label-custom">Proposed Arrival Time</label>
+                                    <div class="d-flex flex-column">
+                                        {{ form.pickup_time }}
+                                    </div>
+                                    {% if form.pickup_time.errors %}
+                                    <div class="text-danger extra-small mt-1">
+                                        {% for error in form.pickup_time.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label-custom">Vehicle / Logistics Info</label>
+                                    <div class="d-flex flex-column">
+                                        {{ form.vehicle_info }}
+                                    </div>
+                                    <div class="extra-small text-muted mt-1">Mention vehicle number or helper counts.</div>
+                                    {% if form.vehicle_info.errors %}
+                                    <div class="text-danger extra-small mt-1">
+                                        {% for error in form.vehicle_info.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3 form-check d-flex align-items-center gap-2">
+                                    {{ form.needs_delivery }}
+                                    <label class="form-check-label extra-small fw-bold text-muted" for="id_needs_delivery" style="margin-bottom:0; cursor:pointer;">
+                                        Request Volunteer Driver Delivery
+                                    </label>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-confirm shadow-sm py-2 fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.85rem;">
+                                        CONFIRM CLAIM REQUEST
+                                    </button>
+                                </div>
+                            </form>
+                            {% else %}
+                            <div class="text-center py-3">
+                                <div class="bg-emerald-light text-emerald rounded-circle d-inline-flex align-items-center justify-content-center mb-2 animate-bounce" style="width: 48px; height: 48px; background-color: var(--brand-emerald-light);">
+                                    <i class="fas fa-check" style="color: var(--brand-emerald-dark);"></i>
+                                </div>
+                                <h6 class="fw-bold text-dark mb-1">Request Logged</h6>
+                                <p class="extra-small text-muted mb-3 px-2" style="line-height: 1.4;">You have successfully requested this surplus food. The donor has been notified to approve your arrival time.</p>
+                                <a href="{% url 'receiver:dashboard' %}" class="btn btn-white border btn-sm px-3 py-1.5 fw-bold text-muted rounded-pill shadow-sm extra-small">Back to Marketplace</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Safety & Donor Details (Combined into a single Card!) -->
+                    <div class="card detail-card shadow-sm border-0">
+                        <div class="card-body p-3 p-md-4">
+                            <!-- Safety Meter Section -->
+                            <h6 class="text-muted fw-bold text-uppercase extra-small mb-3" style="letter-spacing: 0.05em;">Real-Time Safety Meter</h6>
+                            <div class="row align-items-center g-3 mb-3">
+                                <div class="col-5 text-center border-end">
+                                    <div class="d-inline-block">
+                                        <div id="mainTime" class="fw-bold">0</div>
+                                        <div id="mainUnit" class="text-muted extra-small fw-bold text-uppercase mt-1" style="letter-spacing: 0.03em;">Hours</div>
+                                    </div>
+                                </div>
+                                <div class="col-7">
+                                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                                        <span class="extra-small text-muted fw-bold">Freshness Status:</span>
+                                        <span id="safetyStatus" class="extra-small fw-bold text-success text-uppercase">Checking...</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px; border-radius: 4px; background-color: #f1f5f9; overflow: hidden;">
+                                        <div id="safetyProgress" class="progress-bar" role="progressbar" style="width: 0%; transition: width 0.5s ease, background-color 0.5s ease;"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between extra-small text-muted mt-1" style="font-size: 0.65rem;">
+                                        <span>Prepared</span>
+                                        <span>Expired</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Divider line -->
+                            <hr class="my-3 text-muted opacity-25">
+
+                            <!-- Donor Section -->
+                            <h6 class="text-muted fw-bold text-uppercase extra-small mb-3" style="letter-spacing: 0.05em;">Donor Information</h6>
+                            <div class="d-flex align-items-center">
+                                <div class="donor-avatar-lg me-3 flex-shrink-0">
+                                    {{ food.donor.username|slice:":1"|upper }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold mb-0 text-emerald-dark" style="font-size: 0.9rem;">{{ food.donor.username }}</h6>
+                                    <p class="extra-small text-muted mb-1" style="font-size: 0.7rem;">
+                                        <i class="fas fa-shield-alt text-emerald me-1"></i> Food Safety Certified Partner
+                                    </p>
+                                    <span class="badge bg-light text-success extra-small fw-bold border py-1 px-2" style="font-size: 0.65rem; color: var(--brand-emerald-dark) !important; border-color: rgba(16, 185, 129, 0.2) !important;">
+                                        <i class="fas fa-check-circle me-1"></i> HIGHLY RESPONSIVE
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ----------------- Safety Freshness Meter -----------------
+    const expiryDate = new Date('{{ food.expiry_time|date:"Y/m/d H:i:s" }}').getTime();
+    const preparedDate = new Date('{{ food.prepared_time|date:"Y/m/d H:i:s" }}').getTime();
+    const totalWindow = expiryDate - preparedDate;
+
+    function updateSafetyMeter() {
+        const now = new Date().getTime();
+        const remaining = expiryDate - now;
+        const elapsed = now - preparedDate;
+
+        const timeDisplay = document.getElementById('mainTime');
+        const unitDisplay = document.getElementById('mainUnit');
+        const progress = document.getElementById('safetyProgress');
+        const statusText = document.getElementById('safetyStatus');
+
+        if (remaining < 0) {
+            timeDisplay.innerText = "0";
+            unitDisplay.innerText = "EXPIRED";
+            statusText.innerText = "UNSAFE FOR CONSUMPTION";
+            statusText.className = "extra-small fw-bold text-danger";
+            progress.style.width = "100%";
+            progress.className = "progress-bar bg-danger";
+            return;
+        }
+
+        const hours = Math.floor(remaining / (1000 * 60 * 60));
+        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+        const progressPercent = Math.min((elapsed / totalWindow) * 100, 100);
+
+        timeDisplay.innerText = hours > 0 ? hours : minutes;
+        unitDisplay.innerText = hours > 0 ? (hours === 1 ? 'Hr' : 'Hrs') : 'Mins';
+        progress.style.width = progressPercent + "%";
+
+        if (progressPercent < 50) {
+            statusText.innerText = "Optimal Freshness";
+            statusText.className = "extra-small fw-bold text-success";
+            progress.style.backgroundColor = "#10b981";
+        } else if (progressPercent < 80) {
+            statusText.innerText = "Safety Window Closing";
+            statusText.className = "extra-small fw-bold text-warning";
+            progress.style.backgroundColor = "#f59e0b";
+        } else {
+            statusText.innerText = "Urgent: Expedite Pickup";
+            statusText.className = "extra-small fw-bold text-danger";
+            progress.style.backgroundColor = "#ef4444";
+        }
+    }
+
+    updateSafetyMeter();
+    setInterval(updateSafetyMeter, 60000); // Update every minute
+
+    // ----------------- Leaflet Interactive Map & In-App Directions -----------------
+    const listingLat = parseFloat("{{ food.latitude }}");
+    const listingLng = parseFloat("{{ food.longitude }}");
+    const receiverLat = parseFloat("{{ request.user.profile.latitude }}") || null;
+    const receiverLng = parseFloat("{{ request.user.profile.longitude }}") || null;
+
+    let detailMap = null;
+    let foodMarker = null;
+    let receiverMarker = null;
+    let routeLayer = null;
+
+    if (listingLat && listingLng) {
+        detailMap = L.map('detail-map', {
+            zoomControl: true
+        }).setView([listingLat, listingLng], 14);
+
+        L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 22,
+            attribution: '© Google Maps'
+        }).addTo(detailMap);
+
+        // Food listing marker
+        foodMarker = L.marker([listingLat, listingLng]).addTo(detailMap);
+        foodMarker.bindPopup("<strong>Pickup Location</strong><br>{{ food.pickup_location|escapejs }}").openPopup();
+
+        // If receiver coordinates exist, add receiver marker
+        if (receiverLat && receiverLng) {
+            const receiverIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+            receiverMarker = L.marker([receiverLat, receiverLng], { icon: receiverIcon }).addTo(detailMap);
+            receiverMarker.bindPopup("<strong>Your Location</strong>").openPopup();
+        }
+    } else {
+        // Hide map container if coordinates are missing
+        document.getElementById('detail-map').style.display = 'none';
+    }
+
+    // In-app directions using Open Source Routing Machine (OSRM)
+    document.getElementById('get-directions').addEventListener('click', function() {
+        if (!listingLat || !listingLng) {
+            alert("Food listing location coordinates are not specified.");
+            return;
+        }
+
+        if (!receiverLat || !receiverLng) {
+            alert("Your location coordinates are not set in your profile. Please configure your profile location first to enable in-app directions!");
+            return;
+        }
+
+        const directionsBtn = document.getElementById('get-directions');
+        const originalText = directionsBtn.innerHTML;
+        directionsBtn.disabled = true;
+        directionsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Routing...';
+
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${receiverLng},${receiverLat};${listingLng},${listingLat}?overview=full&geometries=geojson`;
+
+        fetch(osrmUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    const geometry = route.geometry;
+
+                    // Clear previous route layer
+                    if (routeLayer) {
+                        detailMap.removeLayer(routeLayer);
+                    }
+
+                    // Add new route line
+                    routeLayer = L.geoJSON(geometry, {
+                        style: {
+                            color: '#3b82f6', // clean routing blue
+                            weight: 5,
+                            opacity: 0.85
+                        }
+                    }).addTo(detailMap);
+
+                    // Fit map bounds to show full route path
+                    detailMap.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+                    // Show route statistics in the popup
+                    const distKm = (route.distance / 1000).toFixed(1);
+                    const durMin = Math.round(route.duration / 60);
+                    
+                    foodMarker.bindPopup("<strong>Pickup Location</strong><br>Distance: " + distKm + " km<br>Est. Drive: " + durMin + " mins").openPopup();
+                    directionsBtn.innerHTML = '<i class="fas fa-check"></i> Routed (' + distKm + ' km)';
+                } else {
+                    alert("Could not compute driving directions between locations.");
+                    directionsBtn.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error("OSRM Routing error:", error);
+                alert("Routing service is currently offline. Please try again later.");
+                directionsBtn.innerHTML = originalText;
+            })
+            .finally(() => {
+                directionsBtn.disabled = false;
+            });
+    });
+
+    document.getElementById('open-maps').addEventListener('click', function() {
+        const address = '{{ food.pickup_location|escapejs }}';
+        const url = 'https://maps.google.com/maps?q=' + encodeURIComponent(address);
+        window.open(url, '_blank');
+    });
+
+    // ----------------- Fullscreen Map Logic (DOM portal movement) -----------------
+    const fullscreenBtn = document.getElementById('map-fullscreen');
+    const mapPlaceholder = document.getElementById('map-placeholder');
+    const mapInnerContainer = document.getElementById('map-inner-container');
+
+    if (fullscreenBtn && mapPlaceholder && mapInnerContainer) {
+        fullscreenBtn.addEventListener('click', toggleFullscreenMap);
+
+        function toggleFullscreenMap() {
+            const isCurrentlyFullscreen = document.querySelector('.map-fullscreen-overlay');
+
+            if (!isCurrentlyFullscreen) {
+                // 1. Create a modal overlay container at the root level of the body
+                const overlay = document.createElement('div');
+                overlay.className = 'map-fullscreen-overlay';
+                overlay.id = 'map-overlay-root';
+
+                // 2. Append overlay to body
+                document.body.appendChild(overlay);
+
+                // 3. Move the map inner container into the overlay
+                overlay.appendChild(mapInnerContainer);
+
+                // 4. Update fullscreen button icon and lock body scrolling
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress" style="color: var(--text-muted); font-size: 14px;"></i>';
+                document.body.style.overflow = 'hidden';
+            } else {
+                // 1. Move the map inner container back to its original placeholder
+                mapPlaceholder.appendChild(mapInnerContainer);
+
+                // 2. Remove overlay from body
+                const overlay = document.getElementById('map-overlay-root');
+                if (overlay) {
+                    overlay.remove();
+                }
+
+                // 3. Update button icon and unlock body scrolling
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand" style="color: var(--text-muted); font-size: 14px;"></i>';
+                document.body.style.overflow = '';
+            }
+
+            // 5. Force Leaflet to recalculate sizes immediately
+            if (detailMap) {
+                setTimeout(() => {
+                    detailMap.invalidateSize();
+                }, 150);
+            }
+        }
+
+        // Close on ESC key press
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.querySelector('.map-fullscreen-overlay')) {
+                toggleFullscreenMap();
+            }
+        });
+    }
+
+    // ----------------- Add Bootstrap Form Styling classes -----------------
+    const inputs = document.querySelectorAll('#claimForm input, #claimForm textarea');
+    inputs.forEach(el => {
+        el.classList.add('form-control');
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,509 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Frequently Asked Questions | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --slate-900: #0f172a;
+        --slate-800: #1e293b;
+        --slate-500: #64748b;
+        --slate-50: #f8fafc;
+        --border-color: #e2e8f0;
+        --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .faqs-header {
+        text-align: center;
+        padding: 4rem 1rem 2rem;
+        background: linear-gradient(135deg, var(--brand-emerald-light) 0%, #ffffff 100%);
+    }
+
+    .faqs-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--slate-900);
+        margin-bottom: 1rem;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+    }
+
+    .faqs-subtitle {
+        font-size: 1rem;
+        color: var(--slate-500);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .faqs-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .faqs-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 3rem;
+        margin-top: 3rem;
+    }
+
+    .faq-section {
+        margin-bottom: 0;
+    }
+
+    .faq-section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--slate-900);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--brand-emerald);
+        position: relative;
+    }
+
+    .faq-item {
+        background-color: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        transition: var(--transition-smooth);
+        cursor: pointer;
+    }
+
+    .faq-item:hover {
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        border-color: var(--brand-emerald);
+        transform: translateY(-2px);
+    }
+
+    .faq-question {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        background-color: white;
+        border: none;
+        width: 100%;
+        text-align: left;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--slate-900);
+        transition: var(--transition-smooth);
+        gap: 1rem;
+    }
+
+    .faq-question:hover {
+        background-color: var(--brand-emerald-light);
+        color: var(--slate-900);
+    }
+
+    .faq-icon {
+        font-size: 1.25rem;
+        color: var(--brand-emerald);
+        transition: transform 0.3s ease;
+        font-weight: bold;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+    }
+
+    .faq-item.active .faq-icon {
+        transform: rotate(45deg);
+    }
+
+    .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+        background-color: var(--slate-50);
+        color: var(--slate-700);
+        font-size: 0.9rem;
+        line-height: 1.7;
+        padding: 0 1.5rem;
+    }
+
+    .faq-item.active .faq-answer {
+        max-height: 500px;
+        padding: 1rem 1.5rem 1.5rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1199.98px) {
+        .faqs-grid {
+            gap: 2.5rem;
+        }
+
+        .faqs-title {
+            font-size: 2.2rem;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .faqs-header {
+            padding: 3rem 1rem 1.5rem;
+        }
+
+        .faqs-title {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .faqs-subtitle {
+            font-size: 0.95rem;
+        }
+
+        .faqs-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .faq-section-title {
+            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .faq-question {
+            font-size: 0.95rem;
+            padding: 1rem 1.25rem;
+        }
+
+        .faq-answer {
+            font-size: 0.85rem;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .faqs-header {
+            padding: 2rem 1rem 1rem;
+        }
+
+        .faqs-title {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .faqs-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .faqs-container {
+            padding: 0 0.75rem;
+        }
+
+        .faqs-grid {
+            margin-top: 1.5rem;
+        }
+
+        .faq-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .faq-section-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .faq-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .faq-question {
+            font-size: 0.9rem;
+            padding: 0.9rem 1rem;
+        }
+
+        .faq-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 1rem;
+        }
+
+        .faq-answer {
+            font-size: 0.8rem;
+            padding: 0 1rem;
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 0.75rem 1rem 1rem;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .faqs-header {
+            padding: 1.5rem 0.75rem;
+        }
+
+        .faqs-title {
+            font-size: 1.5rem;
+        }
+
+        .faqs-subtitle {
+            font-size: 0.85rem;
+        }
+
+        .faqs-container {
+            padding: 0 0.5rem;
+        }
+
+        .faqs-grid {
+            margin-top: 1.25rem;
+        }
+
+        .faq-section {
+            margin-bottom: 1.25rem;
+        }
+
+        .faq-section-title {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .faq-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .faq-question {
+            font-size: 0.85rem;
+            padding: 0.75rem 0.9rem;
+            gap: 0.5rem;
+        }
+
+        .faq-icon {
+            width: 18px;
+            height: 18px;
+            font-size: 0.9rem;
+        }
+
+        .faq-answer {
+            font-size: 0.75rem;
+            padding: 0 0.9rem;
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 0.6rem 0.9rem 0.9rem;
+        }
+    }
+</style>
+
+<section class="faqs-header">
+    <div class="container">
+        <h1 class="faqs-title">Frequently Asked Questions</h1>
+        <p class="faqs-subtitle">Can't find what you're looking for? Reach out to our support team for personalized assistance.</p>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="faqs-container">
+        <div class="faqs-grid">
+            <!-- How It Works -->
+            <div class="faq-section">
+                <h2 class="faq-section-title">How It Works</h2>
+                <div class="faq-item" data-section="how-it-works">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        What is EcoEats and how does it work?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        EcoEats is a platform that connects food donors with organizations that can use surplus food. Donors post available food, and verified nonprofits can claim and collect it, reducing food waste and supporting communities.
+                    </div>
+                </div>
+                <div class="faq-item" data-section="how-it-works">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        Who can donate food?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Restaurants, retailers, caterers, farms, schools, and any business or individual with surplus food that meets safety standards can donate through our platform.
+                    </div>
+                </div>
+                <div class="faq-item" data-section="how-it-works">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        How do I get started as a donor?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Create a free account, verify your information, and start posting food donations. Our team will guide you through the process and ensure compliance with food safety regulations.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Food Safety & Liability -->
+            <div class="faq-section">
+                <h2 class="faq-section-title">Food Safety & Liability</h2>
+                <div class="faq-item" data-section="food-safety">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        Is the food safe to eat?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        All donations must meet food safety standards. Donors are responsible for ensuring food is safe and properly labeled. Recipients should inspect donations upon receipt.
+                    </div>
+                </div>
+                <div class="faq-item" data-section="food-safety">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        What about liability for donated food?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Good Samaritan food donation laws protect donors from liability when food is donated in good faith. We recommend consulting local regulations and maintaining proper documentation.
+                    </div>
+                </div>
+                <div class="faq-item" data-section="food-safety">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        How is food safety monitored?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        We require donor verification and encourage recipients to report any concerns. All users must follow food handling best practices and local health regulations.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Getting Started -->
+            <div class="faq-section">
+                <h2 class="faq-section-title">Getting Started</h2>
+                <div class="faq-item" data-section="getting-started">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        How do I create an account?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Click "Get Started" or "Sign In" and choose whether you're a donor or recipient. Fill out the registration form and verify your information. Setup takes just a few minutes.
+                    </div>
+                </div>
+                <div class="faq-item" data-section="getting-started">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        What verification is required?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Donors need business verification, while recipients (nonprofits) need 501(c)(3) status or equivalent. We'll guide you through the process and approve accounts quickly.
+                    </div>
+                </div>
+                <div class="faq-item" data-section="getting-started">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        Is there a cost to use the platform?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        EcoEats is completely free for both donors and recipients. We believe in making food redistribution accessible to support communities and reduce waste.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="faq-section">
+                <h2 class="faq-section-title">Troubleshooting</h2>
+                <div class="faq-item" data-section="troubleshooting">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        My account isn't working. What should I do?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Try logging out and back in, or clear your browser cache. If issues persist, contact our support team with your username and a description of the problem.
+                    </div>
+                </div>
+                <div class="faq-item" data-section="troubleshooting">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        How do I edit or delete a food listing?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Go to your dashboard, find the listing, and use the edit or delete options. If food has been claimed, contact the recipient directly to coordinate changes.
+                    </div>
+                </div>
+                <div class="faq-item" data-section="troubleshooting">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        I can't find available donations in my area.
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Check your search filters and location settings. If no donations are available, consider expanding your search radius or contacting local donors directly.
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Us -->
+            <div class="faq-section">
+                <h2 class="faq-section-title">About Us</h2>
+                <div class="faq-item" data-section="about-us">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        What is EcoEats' mission?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Our mission is to eliminate food waste by connecting surplus food with organizations that can use it, while building sustainable communities and supporting those in need.
+                    </div>
+                </div>
+                <div class="faq-item" data-section="about-us">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        How is EcoEats funded?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        We operate as a nonprofit organization funded through grants, donations, and partnerships. The platform itself is free to use for all participants.
+                    </div>
+                </div>
+                <div class="faq-item" data-section="about-us">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        Can I volunteer or partner with EcoEats?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Yes! We welcome volunteers for pickup/delivery coordination and partnerships with organizations that share our mission. Contact us to learn about current opportunities.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function toggleFaq(button) {
+        const item = button.closest('.faq-item');
+        const section = item.dataset.section;
+        const isActive = item.classList.contains('active');
+
+        // Close all items in the same section
+        document.querySelectorAll(`[data-section="${section}"]`).forEach(otherItem => {
+            if (otherItem !== item) {
+                otherItem.classList.remove('active');
+            }
+        });
+
+        // Toggle current item
+        item.classList.toggle('active');
+    }
+
+    // Keyboard accessibility
+    document.addEventListener('DOMContentLoaded', function() {
+        const faqQuestions = document.querySelectorAll('.faq-question');
+
+        faqQuestions.forEach(question => {
+            question.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleFaq(this);
+                }
+            });
+        });
+    });
+</script>
+
+{% endblock %}

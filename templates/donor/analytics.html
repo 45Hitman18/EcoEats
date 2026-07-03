@@ -1,0 +1,400 @@
+{% extends 'donor/base.html' %}
+{% load static %}
+
+{% block title %}Sustainability Report | Donor Portal{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+    }
+
+    .analytics-container {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        color: var(--text-main);
+    }
+
+    .kpi-card {
+        border-radius: 1rem;
+        border: 1px solid var(--border-color);
+        background: #ffffff;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 10px 15px -3px rgba(0, 0, 0, 0.03);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+    }
+
+    .kpi-co2::before { background-color: #059669; }
+    .kpi-meals::before { background-color: #3b82f6; }
+    .kpi-value::before { background-color: #10b981; }
+
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .bg-co2-light { background-color: #d1fae5; color: #065f46; }
+    .bg-meals-light { background-color: #dbeafe; color: #1e40af; }
+    .bg-value-light { background-color: #ccfbf1; color: #0f766e; }
+
+    /* Performance card */
+    .report-card {
+        border-radius: 1.25rem;
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .ngo-item {
+        padding: 0.85rem 1rem;
+        border-radius: 10px;
+        background-color: #f8fafc;
+        border: 1px solid #f1f5f9;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: transform 0.15s ease;
+    }
+    .ngo-item:hover {
+        transform: translateX(3px);
+        background-color: #f1f5f9;
+    }
+
+    .ngo-badge {
+        font-weight: 700;
+        background-color: var(--brand-emerald-light);
+        color: var(--brand-emerald-dark);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        padding: 0.25rem 0.65rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+    }
+
+    .btn-pdf {
+        background-color: var(--brand-emerald);
+        border: none;
+        color: white !important;
+        font-weight: 700;
+        border-radius: 50px;
+        padding: 0.5rem 1.25rem;
+        font-size: 0.85rem;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.15);
+    }
+    .btn-pdf:hover {
+        background-color: var(--brand-emerald-dark);
+        box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25);
+        transform: translateY(-1px);
+    }
+
+    /* PRINT LAYOUT OPTIMIZATIONS */
+    @media print {
+        body {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            font-size: 11pt !important;
+        }
+
+        /* Hide elements like navigation header, footer, discard/print buttons, and chatbot widgets */
+        nav, footer, .btn-pdf, .btn-white, .breadcrumb, #chatbotBtn, #chatbotContainer, .chatbot-trigger, .no-print {
+            display: none !important;
+        }
+
+        .dashboard-wrapper {
+            background-color: #ffffff !important;
+            padding: 0 !important;
+            min-height: auto !important;
+        }
+
+        .analytics-container {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .kpi-card {
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+            background-color: #ffffff !important;
+            page-break-inside: avoid;
+        }
+        
+        .report-card {
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+            background-color: #ffffff !important;
+            page-break-inside: avoid;
+        }
+
+        .ngo-item {
+            border: 1px solid #e2e8f0 !important;
+            background-color: #ffffff !important;
+        }
+    }
+</style>
+
+<div class="analytics-container container-fluid px-md-5">
+    <!-- Header Block -->
+    <div class="row align-items-center mb-4 no-print">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb extra-small fw-bold text-uppercase mb-2 text-muted" style="letter-spacing: 0.05em; font-size: 0.72rem;">
+                    <li class="breadcrumb-item"><a href="{% url 'donor:dashboard' %}" class="text-muted text-decoration-none hover-emerald">Donor Portal</a></li>
+                    <li class="breadcrumb-item active text-emerald" style="color: var(--brand-emerald) !important;">Sustainability Analytics</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold text-dark mb-1">Sustainability & Impact Report</h1>
+            <p class="text-muted mb-0 small">Track your environmental savings and local community contributions.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <button onclick="window.print();" class="btn btn-pdf me-2">
+                <i class="fas fa-file-pdf"></i> Download Report (PDF)
+            </button>
+            <a href="{% url 'donor:dashboard' %}" class="btn btn-white btn-sm border px-3 fw-bold text-muted shadow-sm rounded-pill" style="border-color: var(--border-color) !important; font-size: 0.85rem;">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Printable Header Banner (Only visible in Print) -->
+    <div class="d-none d-print-block border-bottom pb-4 mb-4">
+        <div class="row align-items-center">
+            <div class="col-8">
+                <h1 class="h2 fw-bold text-dark m-0">EcoEats Impact Report</h1>
+                <p class="text-muted m-0 mt-1">Sustainability & Corporate Social Responsibility (CSR) Summary</p>
+                <div class="small text-muted mt-2">
+                    <strong>Organization/Donor:</strong> {{ request.user.username }}<br>
+                    <strong>Report Generation Date:</strong> <span id="print-date"></span>
+                </div>
+            </div>
+            <div class="col-4 text-end">
+                <div class="d-inline-block p-2 border border-emerald rounded-3" style="color: var(--brand-emerald-dark); font-weight: 900; font-size: 1.25rem;">
+                    <i class="fas fa-leaf me-1"></i> EcoEats
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Metrics Row -->
+    <div class="row g-4 mb-5">
+        <!-- CO2 Saved -->
+        <div class="col-md-4">
+            <div class="kpi-card kpi-co2 p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.05em;">CO2 Emissions Saved</span>
+                    <div class="kpi-icon bg-co2-light">
+                        <i class="fas fa-cloud-sun"></i>
+                    </div>
+                </div>
+                <h2 class="fw-bold mb-1" style="color: var(--slate-900);">{{ co2_saved|floatformat:1 }} <span class="h6 text-muted">kg CO2</span></h2>
+                <p class="text-muted extra-small mb-0 mt-2">Prevented greenhouse gases by avoiding landfill waste.</p>
+            </div>
+        </div>
+
+        <!-- Meals Distributed -->
+        <div class="col-md-4">
+            <div class="kpi-card kpi-meals p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.05em;">Meals Rescued</span>
+                    <div class="kpi-icon bg-meals-light">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                </div>
+                <h2 class="fw-bold mb-1" style="color: var(--slate-900);">{{ meals_distributed }} <span class="h6 text-muted">Meals</span></h2>
+                <p class="text-muted extra-small mb-0 mt-2">Diverted servings provided to local shelters and NGOs.</p>
+            </div>
+        </div>
+
+        <!-- Equivalent Value Saved -->
+        <div class="col-md-4">
+            <div class="kpi-card kpi-value p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.05em;">Equivalent Value Saved</span>
+                    <div class="kpi-icon bg-value-light">
+                        <i class="fas fa-hand-holding-dollar"></i>
+                    </div>
+                </div>
+                <h2 class="fw-bold mb-1" style="color: var(--slate-900);">₹{{ value_saved|floatformat:2 }}</h2>
+                <p class="text-muted extra-small mb-0 mt-2">Estimated financial value saved based on food portions.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Monthly Performance Chart (Left Column) -->
+        <div class="col-lg-8">
+            <div class="card report-card border-0 p-4">
+                <h5 class="fw-bold text-dark mb-4" style="font-size: 1.05rem;">
+                    <i class="fas fa-chart-bar text-emerald me-1.5"></i>
+                    Monthly Performance (Diverted Food Yield)
+                </h5>
+                <div style="position: relative; height: 320px; width: 100%;">
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+                <div class="form-text extra-small text-muted mt-3">
+                    * Estimates calculated from total serving portions diverted from landfills. Greenhouse gas offsets utilize the standard index of 2.5 kg carbon emission offset per 1.0 kg food waste avoided.
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Top Partners & Quick Info -->
+        <div class="col-lg-4 d-flex flex-column gap-4">
+            
+            <!-- Top Supported Organizations -->
+            <div class="card report-card border-0 p-4">
+                <h5 class="fw-bold text-dark mb-4" style="font-size: 1.05rem;">
+                    <i class="fas fa-hands-helping text-emerald me-1.5"></i>
+                    Top Supported NGOs
+                </h5>
+                
+                {% if top_organizations %}
+                    {% for org in top_organizations %}
+                    <div class="ngo-item">
+                        <div>
+                            <div class="fw-bold text-dark small">{{ org.requester__username }}</div>
+                            <div class="extra-small text-muted">{{ org.count }} request{{ org.count|pluralize }} claimed</div>
+                        </div>
+                        <span class="ngo-badge">{{ org.total_servings }} serving{{ org.total_servings|pluralize }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-folder-open fa-2x mb-2 text-light"></i>
+                        <p class="extra-small mb-0">No completed donations yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Proximity & Scope Statistics -->
+            <div class="card report-card border-0 p-4" style="background-color: #fafbfc;">
+                <h6 class="fw-bold text-slate-800 text-uppercase extra-small mb-3" style="letter-spacing: 0.05em;">Community Distribution Impact</h6>
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-2">
+                    <span class="small text-muted">NGO Partners Connected:</span>
+                    <strong class="small text-dark">{{ supported_centers_count }}</strong>
+                </div>
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-2">
+                    <span class="small text-muted">Diverted Waste Volume:</span>
+                    <strong class="small text-dark">{{ total_quantity }} units</strong>
+                </div>
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="small text-muted">Verification Status:</span>
+                    <span class="badge bg-success-light text-success-dark extra-small fw-bold px-2 py-0.5 rounded-pill">Active Contributor</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fill print date dynamically
+    const printDateSpan = document.getElementById('print-date');
+    if (printDateSpan) {
+        printDateSpan.textContent = new Date().toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Chart.js trend visualization
+    const ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+    
+    // Parse labels and values passed from Django view
+    const chartLabels = JSON.parse('{{ chart_labels_json|safe }}');
+    const chartData = JSON.parse('{{ chart_data_json|safe }}');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Diverted Servings (Units)',
+                data: chartData,
+                backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                borderColor: 'rgba(16, 185, 129, 1)',
+                borderWidth: 1.5,
+                borderRadius: 6,
+                barThickness: 32,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Yield: ${context.parsed.y} Servings`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f1f5f9',
+                    },
+                    ticks: {
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        },
+                        color: '#64748b'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            family: 'Inter',
+                            size: 11,
+                            weight: 600
+                        },
+                        color: '#1e293b'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

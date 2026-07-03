@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Partnerships & Sales | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --brand-emerald: #10b981;
+        --brand-emerald-dark: #059669;
+        --brand-emerald-light: #ecfdf5;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --border-color: #e2e8f0;
+        --text-slate: #1e293b;
+        --text-muted: #64748b;
+    }
+
+    .contact-wrapper {
+        background-color: var(--slate-50);
+        min-height: calc(100vh - 140px);
+        padding: 4rem 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Left Info column styling */
+    .benefit-item {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .benefit-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background-color: var(--brand-emerald-light);
+        color: var(--brand-emerald-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1rem;
+        border: 1px solid rgba(16, 185, 129, 0.15);
+    }
+
+    /* Right form column styling */
+    .form-card {
+        border-radius: 1.25rem;
+        border: 1px solid var(--border-color);
+        background: #ffffff;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04);
+        overflow: hidden;
+    }
+
+    .form-control,
+    .form-select,
+    .form-textarea {
+        border-radius: 8px !important;
+        border: 1.5px solid var(--border-color) !important;
+        padding: 0.65rem 0.85rem !important;
+        font-size: 0.9rem !important;
+    }
+    .form-control:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        border-color: var(--brand-emerald) !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, var(--brand-emerald) 0%, var(--brand-emerald-dark) 100%);
+        border: none;
+        color: white !important;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.1);
+    }
+    .btn-submit:hover {
+        box-shadow: 0 6px 12px rgba(16, 185, 129, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .support-pill-box {
+        background-color: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+    }
+</style>
+
+<div class="contact-wrapper">
+    <div class="container">
+        
+        <div class="mb-4">
+            <a href="{% url 'accounts:home' %}" class="btn btn-white btn-sm border px-3 fw-bold text-muted shadow-sm rounded-pill text-decoration-none" style="font-size: 0.82rem; border-color: var(--border-color) !important; background-color: #ffffff;">
+                <i class="fas fa-arrow-left me-1.5"></i> Back
+            </a>
+        </div>
+
+
+
+        <div class="row g-5 align-items-center">
+            <!-- Left Panel: Benefits and Info -->
+            <div class="col-lg-5">
+                <span class="badge bg-emerald-light text-emerald-dark px-3 py-1.5 rounded-pill fw-bold extra-small mb-3 shadow-sm" style="background: var(--brand-emerald-light); color: var(--brand-emerald-dark); font-size:0.68rem;">
+                    <i class="fas fa-handshake me-1.5"></i> ENTERPRISE PARTNERSHIPS
+                </span>
+                <h1 class="fw-bold text-dark mb-3 display-6" style="letter-spacing: -0.02em;">Partner with EcoEats</h1>
+                <p class="text-muted small mb-4" style="line-height: 1.6;">
+                    Streamline your surplus logistics, track CSR environmental metrics, and support local community shelters with our secure, zero-waste infrastructure.
+                </p>
+
+                <!-- Benefits Checklist -->
+                <div class="benefit-item">
+                    <div class="benefit-icon-box">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <strong class="text-dark small d-block mb-0.5">CSR & Impact Reports</strong>
+                        <span class="text-muted extra-small">Automated logging of CO2 offsets, food yields, and community donations ready to download.</span>
+                    </div>
+                </div>
+
+                <div class="benefit-item">
+                    <div class="benefit-icon-box">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div>
+                        <strong class="text-dark small d-block mb-0.5">Good Samaritan Legal Cover</strong>
+                        <span class="text-muted extra-small">All surplus food donations are fully protected under FSSAI Good Samaritan safety regulations.</span>
+                    </div>
+                </div>
+
+                <div class="benefit-item">
+                    <div class="benefit-icon-box">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div>
+                        <strong class="text-dark small d-block mb-0.5">Dedicated Logistics Support</strong>
+                        <span class="text-muted extra-small">Priority routing maps, live chats, and coordinated transport for high-volume collections.</span>
+                    </div>
+                </div>
+
+                <!-- Support Card -->
+                <div class="support-pill-box mt-4 shadow-sm">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary-light text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background-color: #eff6ff; color:#1e40af;">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <div>
+                            <span class="extra-small text-muted d-block font-semibold">Direct Partnerships Line</span>
+                            <span class="small fw-bold text-dark">partnerships@ecoeats.org</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Sleek Form Card -->
+            <div class="col-lg-7">
+                <div class="card form-card border-0 p-4 p-md-5">
+                    <h4 class="fw-bold text-dark mb-2">Submit an Inquiry</h4>
+                    <p class="text-muted small mb-4">Complete the form below and our partnerships manager will contact you.</p>
+                    
+                    <form method="post" action="{% url 'contact_sales' %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <!-- Row 1: Names -->
+                            <div class="col-md-6">
+                                <label for="full_name" class="form-label small fw-bold text-muted text-uppercase" style="font-size:0.65rem;">Full Name</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" required placeholder="e.g. Rahul Sharma">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="organization_name" class="form-label small fw-bold text-muted text-uppercase" style="font-size:0.65rem;">Organization Name</label>
+                                <input type="text" class="form-control" id="organization_name" name="organization_name" required placeholder="e.g. Grand Palace Hotel">
+                            </div>
+
+                            <!-- Row 2: Contact -->
+                            <div class="col-md-6">
+                                <label for="email" class="form-label small fw-bold text-muted text-uppercase" style="font-size:0.65rem;">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" required placeholder="e.g. contact@hotel.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label small fw-bold text-muted text-uppercase" style="font-size:0.65rem;">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" required placeholder="e.g. +91 9999999999">
+                            </div>
+
+                            <!-- Row 3: Details -->
+                            <div class="col-md-6">
+                                <label for="organization_type" class="form-label small fw-bold text-muted text-uppercase" style="font-size:0.65rem;">Organization Type</label>
+                                <select class="form-select" id="organization_type" name="organization_type" required>
+                                    <option value="" disabled selected>Select type...</option>
+                                    <option value="restaurant">Restaurant / Hotel</option>
+                                    <option value="manufacturer">Food Manufacturer</option>
+                                    <option value="distributor">Distributor / Warehouse</option>
+                                    <option value="nonprofit">Nonprofit / NGO</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="donation_size" class="form-label small fw-bold text-muted text-uppercase" style="font-size:0.65rem;">Partnership / Donation Size</label>
+                                <select class="form-select" id="donation_size" name="donation_size" required>
+                                    <option value="" disabled selected>Select size...</option>
+                                    <option value="small">Small (occasional surplus)</option>
+                                    <option value="medium">Medium (regular surplus)</option>
+                                    <option value="large">Large (bulk/palletized loads)</option>
+                                </select>
+                            </div>
+
+                            <!-- Row 4: Location -->
+                            <div class="col-12">
+                                <label for="location" class="form-label small fw-bold text-muted text-uppercase" style="font-size:0.65rem;">Location / City</label>
+                                <input type="text" class="form-control" id="location" name="location" required placeholder="e.g. New Delhi, Delhi">
+                            </div>
+
+                            <!-- Row 5: Notes -->
+                            <div class="col-12">
+                                <label for="message" class="form-label small fw-bold text-muted text-uppercase" style="font-size:0.65rem;">Message / Notes</label>
+                                <textarea class="form-textarea form-control" id="message" name="message" rows="3" placeholder="Tell us more about your surplus schedules or logistics requirements..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-submit py-2.5">
+                                <i class="fas fa-paper-plane me-1"></i> Submit Partnerships Inquiry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
