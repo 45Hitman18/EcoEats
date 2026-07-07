@@ -753,3 +753,139 @@ def driver_directory(request):
         'drivers': drivers,
         'eligible_requests': eligible_requests
     })
+
+
+import logging
+import os
+from django.utils.dateparse import parse_datetime
+from django.views.decorators.csrf import csrf_exempt
+
+logger = logging.getLogger('donor.ml')
+
+@csrf_exempt
+@login_required
+def predict_shelf_life(request):
+    if request.user.profile.role != 'donor':
+        return JsonResponse({'error': 'Access denied.'}, status=403)
+
+    if request.method == 'POST':
+        import json
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON.'}, status=400)
+            
+        category = data.get('category')
+        prep_time_str = data.get('prepared_time')
+        temperature_str = data.get('temperature')
+        packaging = data.get('packaging')
+        
+        # 1. Validation
+        valid_categories = ['veg', 'non-veg', 'bakery', 'cooked', 'dairy']
+        valid_packaging = ['airtight', 'boxed', 'open', 'refrigerated']
+        
+        if not category or category not in valid_categories:
+            return JsonResponse({'error': 'Invalid or missing food category.'}, status=400)
+            
+        if not packaging or packaging not in valid_packaging:
+            return JsonResponse({'error': 'Invalid or missing packaging type.'}, status=400)
+            
+        try:
+            temperature = float(temperature_str)
+            if not (0 <= temperature <= 50):
+                raise ValueError()
+        except (TypeError, ValueError):
+            return JsonResponse({'error': 'Temperature must be a number between 0 and 50 °C.'}, status=400)
+            
+        if not prep_time_str:
+            return JsonResponse({'error': 'Missing preparation time.'}, status=400)
+            
+        prepared_time = parse_datetime(prep_time_str)
+        if not prepared_time:
+            return JsonResponse({'error': 'Invalid preparation time format.'}, status=400)
+            
+        # Ensure timezone-aware comparison
+        from django.utils import timezone
+        now = timezone.now()
+        
+        # Handle timezone conversion if prepared_time is naive
+        if timezone.is_naive(prepared_time):
+            prepared_time = timezone.make_aware(prepared_time, timezone.get_default_timezone())
+            
+        if prepared_time > now:
+            return JsonResponse({'error': 'Preparation time cannot be in the future.'}, status=400)
+            
+        # Calculate prep age in hours
+        time_diff = now - prepared_time
+        prep_age_hours = time_diff.total_seconds() / 3600.0
+        
+        if prep_age_hours > 72:
+            return JsonResponse({'error': 'Preparation time is too far in the past (must be within 72 hours).'}, status=400)
+
+        # 2. Retrieve Model
+        from .apps import DonorConfig
+        model = DonorConfig.model
+        feature_columns = DonorConfig.feature_columns
+        
+        # Fallback lazy loading
+        if not model:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            model_path = os.path.abspath(os.path.join(base_dir, '../ml_assets/shelf_life_model.joblib'))
+            if os.path.exists(model_path):
+                try:
+                    import joblib
+                    payload = joblib.load(model_path)
+                    model = payload.get('model')
+                    feature_columns = payload.get('feature_columns')
+                except Exception as e:
+                    logger.error(f"Error lazy-loading ML model: {str(e)}")
+            
+        if not model:
+            return JsonResponse({'error': 'Machine learning model is not available.'}, status=503)
+            
+        # 3. Features One-Hot Encoding
+        try:
+            input_dict = {col: 0.0 for col in feature_columns}
+            
+            # Numeric values
+            input_dict['prep_age_hours'] = prep_age_hours
+            input_dict['temperature'] = temperature
+            
+            # Category
+            cat_col = f"category_{category}"
+            if cat_col in input_dict:
+                input_dict[cat_col] = 1.0
+                
+            # Packaging
+            pack_col = f"packaging_{packaging}"
+            if pack_col in input_dict:
+                input_dict[pack_col] = 1.0
+                
+            # Ordered input features
+            input_vector = [input_dict[col] for col in feature_columns]
+            
+            # 4. Predict
+            prediction = model.predict([input_vector])
+            predicted_hours = float(prediction[0])
+            
+            recommended_expiry = now + timezone.timedelta(hours=predicted_hours)
+            expiry_str = recommended_expiry.strftime('%Y-%m-%dT%H:%M')
+            
+            logger.info(
+                f"ML prediction - Category: {category}, Temp: {temperature}C, "
+                f"Pack: {packaging}, Prep Age: {prep_age_hours:.1f}h. "
+                f"Predicted shelf-life: {predicted_hours:.1f}h. Rec Expiry: {expiry_str}"
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'predicted_shelf_life_hours': round(predicted_hours, 1),
+                'recommended_expiry_time': expiry_str
+            })
+            
+        except Exception as e:
+            logger.error(f"Prediction failed: {str(e)}")
+            return JsonResponse({'error': f"Prediction execution failed: {str(e)}"}, status=500)
+            
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)
+

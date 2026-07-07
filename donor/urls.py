@@ -15,6 +15,7 @@ urlpatterns = [
     path('driver-directory/', views.driver_directory, name='driver_directory'),
     path('allocate-food/', views.allocate_food, name='allocate_food'),
     path('broadcast-alert/', views.broadcast_alert, name='broadcast_alert'),
+    path('predict-shelf-life/', views.predict_shelf_life, name='predict_shelf_life'),
     path('view-requests/<int:food_id>/', views.view_requests, name='view_requests'),
     path('view-all-requests/', views.view_all_requests, name='view_all_requests'),
     path('mark-expired/<int:food_id>/', views.mark_expired, name='mark_expired'),

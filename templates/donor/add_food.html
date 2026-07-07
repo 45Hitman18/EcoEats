@@ -525,6 +525,33 @@
                         </div>
 
                         <div class="row g-4">
+                            <!-- AI Shelf-Life Predictor Inputs -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Food Category (for AI Prediction)</label>
+                                <select id="ml-category" class="form-select-custom">
+                                    <option value="veg" selected>Vegetarian (Generic)</option>
+                                    <option value="non-veg">Non-Vegetarian (Generic)</option>
+                                    <option value="bakery">Bakery / Bread</option>
+                                    <option value="cooked">Cooked Meals / Soups</option>
+                                    <option value="dairy">Dairy Products / Milk</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Packaging Type</label>
+                                <select id="ml-packaging" class="form-select-custom">
+                                    <option value="boxed" selected>Boxed / Tray</option>
+                                    <option value="airtight">Airtight Container</option>
+                                    <option value="open">Open Container</option>
+                                    <option value="refrigerated">Refrigerated Storage</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Ambient Temp (°C)</label>
+                                <input type="number" id="ml-temperature" class="form-control" value="25" min="0" max="50">
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Time Prepared</label>
                                 <div class="input-group">
@@ -532,10 +559,16 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Expiry / Use By</label>
                                 <div class="input-group">
                                     {{ form.expiry_time }}
+                                </div>
+                                <div class="alert alert-success d-none mt-3.5 border-0 p-3" id="ml-notice-box" style="background-color: var(--brand-emerald-light); color: var(--brand-emerald-dark); border-radius: 8px;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-robot animate-bounce" style="font-size: 1.15rem;"></i>
+                                        <span class="small fw-bold">AI Recommended Expiry: Safe shelf-life estimated at <span id="ml-predicted-hours">--</span> hours. Auto-filled expiry time input.</span>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -702,10 +735,62 @@ document.addEventListener('DOMContentLoaded', function() {
         if (val === 'veg') {
             cardVeg.classList.add('active');
             cardNonVeg.classList.remove('active');
+            const mlCategorySelect = document.getElementById('ml-category');
+            if (mlCategorySelect && (mlCategorySelect.value === 'non-veg')) {
+                mlCategorySelect.value = 'veg';
+            }
         } else if (val === 'non-veg') {
             cardNonVeg.classList.add('active');
             cardVeg.classList.remove('active');
+            const mlCategorySelect = document.getElementById('ml-category');
+            if (mlCategorySelect && (mlCategorySelect.value === 'veg' || mlCategorySelect.value === 'bakery' || mlCategorySelect.value === 'dairy')) {
+                mlCategorySelect.value = 'non-veg';
+            }
         }
+        queryShelfLifePrediction();
+    }
+
+    function queryShelfLifePrediction() {
+        const category = document.getElementById('ml-category').value;
+        const packaging = document.getElementById('ml-packaging').value;
+        const temp = document.getElementById('ml-temperature').value;
+        const prepTime = document.getElementById('id_prepared_time').value;
+
+        if (!prepTime || !temp) {
+            return;
+        }
+
+        fetch('/donor/predict-shelf-life/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                category: category,
+                packaging: packaging,
+                temperature: temp,
+                prepared_time: prepTime
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const expiryField = document.getElementById('id_expiry_time');
+                if (expiryField) {
+                    expiryField.value = data.recommended_expiry_time;
+                }
+                const noticeBox = document.getElementById('ml-notice-box');
+                const predHoursSpan = document.getElementById('ml-predicted-hours');
+                if (noticeBox && predHoursSpan) {
+                    predHoursSpan.innerText = data.predicted_shelf_life_hours;
+                    noticeBox.classList.remove('d-none');
+                }
+            } else {
+                console.warn('ML Prediction failed:', data.error);
+            }
+        })
+        .catch(err => console.error('Prediction request error:', err));
     }
 
     // Set initial card states on load
@@ -720,6 +805,28 @@ document.addEventListener('DOMContentLoaded', function() {
         selectFoodType.value = 'non-veg';
         updateCardSelectorStates();
     });
+
+    // Set prepared_time default value to current time if empty
+    const preparedTimeInput = document.getElementById('id_prepared_time');
+    if (preparedTimeInput && !preparedTimeInput.value) {
+        const nowLocal = new Date();
+        const year = nowLocal.getFullYear();
+        const month = String(nowLocal.getMonth() + 1).padStart(2, '0');
+        const day = String(nowLocal.getDate()).padStart(2, '0');
+        const hours = String(nowLocal.getHours()).padStart(2, '0');
+        const minutes = String(nowLocal.getMinutes()).padStart(2, '0');
+        preparedTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    // Attach event listeners for dynamic AI prediction calculation
+    document.getElementById('ml-category').addEventListener('change', queryShelfLifePrediction);
+    document.getElementById('ml-packaging').addEventListener('change', queryShelfLifePrediction);
+    document.getElementById('ml-temperature').addEventListener('input', queryShelfLifePrediction);
+    preparedTimeInput.addEventListener('input', queryShelfLifePrediction);
+    preparedTimeInput.addEventListener('change', queryShelfLifePrediction);
+
+    // Initial check on page load
+    queryShelfLifePrediction();
 
     // ----------------- Quantity Stepper Controls -----------------
     const inputQty = document.getElementById('id_quantity');
