@@ -813,11 +813,13 @@ def predict_shelf_life(request):
             prepared_time = timezone.make_aware(prepared_time, timezone.get_default_timezone())
             
         if prepared_time > now:
-            return JsonResponse({'error': 'Preparation time cannot be in the future.'}, status=400)
+            time_diff_future = prepared_time - now
+            if time_diff_future.total_seconds() > 50400: # 14 hours limit
+                return JsonResponse({'error': 'Preparation time cannot be in the future.'}, status=400)
             
         # Calculate prep age in hours
         time_diff = now - prepared_time
-        prep_age_hours = time_diff.total_seconds() / 3600.0
+        prep_age_hours = max(0.0, time_diff.total_seconds() / 3600.0)
         
         if prep_age_hours > 72:
             return JsonResponse({'error': 'Preparation time is too far in the past (must be within 72 hours).'}, status=400)

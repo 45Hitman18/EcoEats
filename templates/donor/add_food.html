@@ -778,7 +778,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 const expiryField = document.getElementById('id_expiry_time');
                 if (expiryField) {
-                    expiryField.value = data.recommended_expiry_time;
+                    const prepDate = new Date(prepTime);
+                    const expiryDate = new Date(prepDate.getTime() + data.predicted_shelf_life_hours * 60 * 60 * 1000);
+                    const pad = num => String(num).padStart(2, '0');
+                    const localExpiryStr = `${expiryDate.getFullYear()}-${pad(expiryDate.getMonth() + 1)}-${pad(expiryDate.getDate())}T${pad(expiryDate.getHours())}:${pad(expiryDate.getMinutes())}`;
+                    expiryField.value = localExpiryStr;
                 }
                 const noticeBox = document.getElementById('ml-notice-box');
                 const predHoursSpan = document.getElementById('ml-predicted-hours');
