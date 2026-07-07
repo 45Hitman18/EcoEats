@@ -275,7 +275,7 @@ def get_notifications(request):
     notifications = Notification.objects.filter(
         recipient=request.user,
         is_read=False
-    ).order_by('-created_at')[:10]  # Get latest 10 unread notifications
+    ).order_by('-priority_score', '-created_at')[:10]  # Get latest 10 unread notifications
     
     notifications_data = [{
         'id': notif.id,

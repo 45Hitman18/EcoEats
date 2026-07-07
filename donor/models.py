@@ -110,9 +110,110 @@ class Notification(models.Model):
     related_request = models.ForeignKey(FoodRequest, on_delete=models.CASCADE, null=True, blank=True)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    priority_score = models.FloatField(default=0.0)
     
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-priority_score', '-created_at']
     
     def __str__(self):
-        return f'{self.notification_type} for {self.recipient.username}'
+        return f'{self.notification_type} for {self.recipient.username} (Score: {self.priority_score})'
+
+    def calculate_priority(self):
+        """Calculates a smart priority score based on expiry, distance, availability, food category, and urgency."""
+        score = 0.0
+        
+        # 1. Base Urgency weight based on notification type
+        urgency_weights = {
+            'food_expiring': 100.0,
+            'new_request': 80.0,
+            'request_approved': 60.0,
+            'request_completed': 40.0,
+            'request_rejected': 30.0,
+        }
+        score += urgency_weights.get(self.notification_type, 10.0)
+        
+        req = self.related_request
+        if req:
+            listing = req.food_listing
+            
+            # 2. Food Expiry factor
+            if listing and listing.expiry_time:
+                from django.utils import timezone
+                now = timezone.now()
+                if listing.expiry_time > now:
+                    time_to_expiry = listing.expiry_time - now
+                    hours_left = time_to_expiry.total_seconds() / 3600.0
+                    
+                    if hours_left <= 3:
+                        score += 150.0  # Critical
+                    elif hours_left <= 6:
+                        score += 90.0   # High urgency
+                    elif hours_left <= 12:
+                        score += 50.0
+                    elif hours_left <= 24:
+                        score += 20.0
+                else:
+                    score -= 100.0  # Expired
+                    
+            # 3. Food Category factor
+            if listing and listing.food_type:
+                if listing.food_type == 'non-veg':
+                    score += 40.0  # High decay risk
+                elif listing.food_type == 'veg':
+                    score += 20.0
+
+            # 4. Distance factor (Haversine formula between donor and recipient/NGO)
+            donor = listing.donor if listing else None
+            recipient = req.requester
+            if donor and recipient and hasattr(donor, 'profile') and hasattr(recipient, 'profile'):
+                d_prof = donor.profile
+                r_prof = recipient.profile
+                if d_prof.latitude is not None and d_prof.longitude is not None and r_prof.latitude is not None and r_prof.longitude is not None:
+                    import math
+                    lat1, lon1 = float(d_prof.latitude), float(d_prof.longitude)
+                    lat2, lon2 = float(r_prof.latitude), float(r_prof.longitude)
+                    
+                    rad = math.pi / 180.0
+                    dlat = (lat2 - lat1) * rad
+                    dlon = (lon2 - lon1) * rad
+                    a = math.sin(dlat/2)**2 + math.cos(lat1*rad) * math.cos(lat2*rad) * math.sin(dlon/2)**2
+                    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+                    distance_km = 6371.0 * c
+                    
+                    if distance_km <= 5.0:
+                        score += 50.0
+                    elif distance_km <= 15.0:
+                        score += 30.0
+                    else:
+                        score += 10.0
+                        
+            # 5. NGO availability / Driver availability
+            if recipient and hasattr(recipient, 'profile'):
+                if recipient.profile.is_verified:
+                    score += 20.0
+                    
+            if donor and hasattr(donor, 'profile') and donor.profile.latitude is not None:
+                from accounts.models import Profile
+                lat = float(donor.profile.latitude)
+                lon = float(donor.profile.longitude)
+                lat_delta = 0.09  # approx 10km
+                lon_delta = 0.11
+                drivers_count = Profile.objects.filter(
+                    role='driver',
+                    is_driver_onboarded=True,
+                    is_verified=True,
+                    latitude__range=(lat - lat_delta, lat + lat_delta),
+                    longitude__range=(lon - lon_delta, lon + lon_delta)
+                ).count()
+                
+                if drivers_count > 0:
+                    score += min(30.0, drivers_count * 10.0)
+                    
+        return score
+
+    def save(self, *args, **kwargs):
+        try:
+            self.priority_score = self.calculate_priority()
+        except Exception:
+            self.priority_score = 0.0
+        super().save(*args, **kwargs)
