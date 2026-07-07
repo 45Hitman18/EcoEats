@@ -6,8 +6,8 @@ class FoodListingForm(forms.ModelForm):
         model = FoodListing
         fields = ['food_name', 'food_type', 'quantity', 'prepared_time', 'expiry_time', 'notes']
         widgets = {
-            'prepared_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'expiry_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'prepared_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'step': 'any'}),
+            'expiry_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'step': 'any'}),
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
 
@@ -23,7 +23,7 @@ class FoodRequestForm(forms.ModelForm):
         model = FoodRequest
         fields = ['pickup_time', 'contact_person', 'contact_number', 'vehicle_info']
         widgets = {
-            'pickup_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'pickup_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'step': 'any'}),
         }
 
 class DonorReportForm(forms.ModelForm):

@@ -699,10 +699,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Strip seconds/microseconds from initial values of datetime-local fields to avoid browser validation step warnings
     ['id_prepared_time', 'id_expiry_time'].forEach(id => {
         const input = document.getElementById(id);
-        if (input && input.value) {
-            const parts = input.value.split(':');
-            if (parts.length >= 2) {
-                input.value = `${parts[0]}:${parts[1]}`;
+        if (input) {
+            input.setAttribute('step', 'any');
+            if (input.value) {
+                const parts = input.value.split(':');
+                if (parts.length >= 2) {
+                    input.value = `${parts[0]}:${parts[1]}`;
+                }
             }
         }
     });
