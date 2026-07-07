@@ -453,3 +453,29 @@ def driver_directory(request):
         'drivers': drivers,
         'eligible_requests': eligible_requests
     })
+
+@login_required
+def live_drivers(request):
+    if request.user.profile.role != 'receiver':
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+    from accounts.models import Profile
+    # Get all active drivers with non-null coordinates
+    drivers = Profile.objects.filter(
+        role='driver',
+        latitude__isnull=False,
+        longitude__isnull=False
+    ).select_related('user')
+    
+    drivers_data = []
+    for d in drivers:
+        drivers_data.append({
+            'username': d.user.username,
+            'latitude': float(d.latitude),
+            'longitude': float(d.longitude),
+            'vehicle_model': d.vehicle_model or 'Standard Vehicle',
+            'phone': d.phone
+        })
+        
+    return JsonResponse({'drivers': drivers_data})
+

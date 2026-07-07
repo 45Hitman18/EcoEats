@@ -301,7 +301,7 @@
                 <div class="card dashboard-panel-card border-0">
                     <div class="panel-header-bar no-print">
                         <h5><i class="fas fa-certificate text-emerald"></i> Sustainability Certificate</h5>
-                        <button class="btn btn-emerald btn-sm px-3 rounded-2 text-white border-0 fw-bold btn-print-action" onclick="window.print();" style="background: var(--brand-emerald-dark); font-size:0.75rem;"><i class="fas fa-print me-1.5"></i> Print Certificate</button>
+                        <a href="{% url 'donor:generate_csr_certificate' %}" class="btn btn-emerald btn-sm px-3 rounded-2 text-white border-0 fw-bold btn-print-action" style="background: var(--brand-emerald-dark); font-size:0.75rem; text-decoration: none;"><i class="fas fa-file-invoice me-1.5"></i> View Printable Certificate</a>
                     </div>
                     <div class="card-body p-3">
                         

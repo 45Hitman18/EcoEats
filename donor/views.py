@@ -653,6 +653,50 @@ def csr_impact(request):
     return render(request, 'donor/csr_impact.html', context)
 
 @login_required
+def generate_csr_certificate(request):
+    if request.user.profile.role != 'donor':
+        return redirect('accounts:home')
+
+    from django.db.models import Sum
+    from django.utils import timezone
+    import hashlib
+
+    # Calculate metrics
+    donated_listings = FoodListing.objects.filter(donor=request.user, status='donated')
+    total_weight = donated_listings.aggregate(total=Sum('quantity'))['total'] or 0
+
+    co2_offset = round(total_weight * 2.5, 1)
+    water_saved = round(total_weight * 1000)
+    meals_provided = round(total_weight / 0.4)
+
+    # Determine certification tier
+    certification_tier = "Standard Partner"
+    if total_weight >= 500:
+        certification_tier = "Emerald Zero-Waste Champion"
+    elif total_weight >= 250:
+        certification_tier = "Gold Eco Pioneer"
+    elif total_weight >= 100:
+        certification_tier = "Silver Food Rescuer"
+    elif total_weight >= 10:
+        certification_tier = "Bronze Eco Contributor"
+
+    # Generate a unique serial verification hash
+    hash_input = f"{request.user.username}-{total_weight}-{timezone.now().strftime('%Y%m%d')}"
+    cert_code = hashlib.sha256(hash_input.encode('utf-8')).hexdigest()[:12].upper()
+
+    context = {
+        'total_weight': total_weight,
+        'co2_offset': co2_offset,
+        'water_saved': water_saved,
+        'meals_provided': meals_provided,
+        'certification_tier': certification_tier,
+        'cert_code': f"EE-CSR-{cert_code}",
+        'today_date': timezone.now().strftime('%B %d, %Y'),
+        'org_name': request.user.profile.organization_name or request.user.username
+    }
+    return render(request, 'donor/csr_certificate.html', context)
+
+@login_required
 def driver_directory(request):
     if request.user.profile.role != 'donor':
         return redirect('accounts:home')

@@ -12,6 +12,7 @@ urlpatterns = [
     path('food/<int:food_id>/', views.food_detail, name='food_detail'),
     path('submit-feedback/', views.submit_feedback, name='submit_feedback'),
     path('submit-report/', views.submit_report, name='submit_report'),
+    path('live-drivers/', views.live_drivers, name='live_drivers'),
     
     # Notification endpoints
     path('notifications/get/', views.get_notifications, name='get_notifications'),

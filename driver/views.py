@@ -17,11 +17,12 @@ def dashboard(request):
         return redirect('driver:onboarding')
 
     # Get active deliveries assigned to this driver
-    active_delivery = FoodRequest.objects.filter(
+    active_deliveries = FoodRequest.objects.filter(
         driver=request.user, 
         status='approved',
         delivery_status__in=['accepted', 'picked_up']
-    ).select_related('food_listing', 'food_listing__donor', 'requester').first()
+    ).select_related('food_listing', 'food_listing__donor', 'requester')
+    active_delivery = active_deliveries.first()
 
     # Get available delivery requests that need a driver (public pool)
     available_jobs = FoodRequest.objects.filter(
@@ -52,6 +53,7 @@ def dashboard(request):
 
     context = {
         'active_delivery': active_delivery,
+        'active_deliveries': active_deliveries,
         'available_jobs': available_jobs,
         'direct_requests': direct_requests,
         'completed_runs_count': completed_runs_count,
@@ -236,3 +238,30 @@ def decline_direct_request(request, request_id):
 
     messages.warning(request, f'Direct request declined. Shipment has been sent back to the public pool.')
     return redirect('driver:dashboard')
+
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@login_required
+def update_location(request):
+    if request.user.profile.role != 'driver':
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+    if request.method == 'POST':
+        import json
+        try:
+            data = json.loads(request.body)
+            lat = data.get('latitude')
+            lng = data.get('longitude')
+            if lat is not None and lng is not None:
+                profile = request.user.profile
+                profile.latitude = lat
+                profile.longitude = lng
+                profile.save(update_fields=['latitude', 'longitude'])
+                return JsonResponse({'success': True})
+            return JsonResponse({'error': 'Invalid coordinates'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+

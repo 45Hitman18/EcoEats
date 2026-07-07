@@ -237,3 +237,79 @@ def send_location_message(request):
         return JsonResponse({'success': True, 'messages_sent': messages_sent})
         
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+import time
+import json
+from django.http import StreamingHttpResponse
+from donor.models import Notification
+
+@login_required
+def chat_stream(request, user_id):
+    other_user = get_object_or_404(User, id=user_id)
+    
+    def event_stream():
+        last_id = 0
+        yield f"data: {json.dumps({'connected': True})}\n\n"
+        while True:
+            new_msgs = Message.objects.filter(
+                (Q(sender=request.user) & Q(receiver=other_user)) |
+                (Q(sender=other_user) & Q(receiver=request.user))
+            ).filter(id__gt=last_id).order_by('timestamp')
+            
+            if new_msgs.exists():
+                for msg in new_msgs:
+                    last_id = max(last_id, msg.id)
+                    # Mark incoming messages as read
+                    if msg.sender == other_user and not msg.is_read:
+                        msg.is_read = True
+                        msg.save(update_fields=['is_read'])
+                    
+                    data = {
+                        'id': msg.id,
+                        'content': msg.content,
+                        'timestamp': msg.timestamp.strftime('%I:%M %p'),
+                        'is_sent': msg.sender == request.user,
+                        'is_read': msg.is_read,
+                    }
+                    if msg.file:
+                        data['file_url'] = msg.file.url
+                        data['file_name'] = msg.file.name.split('/')[-1]
+                    yield f"data: {json.dumps(data)}\n\n"
+            time.sleep(1)
+            
+    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
+
+
+@login_required
+def notification_stream(request):
+    def event_stream():
+        last_id = 0
+        yield f"data: {json.dumps({'connected': True})}\n\n"
+        while True:
+            new_notifications = Notification.objects.filter(
+                recipient=request.user,
+                id__gt=last_id
+            ).order_by('created_at')
+            
+            if new_notifications.exists():
+                for notif in new_notifications:
+                    last_id = max(last_id, notif.id)
+                    data = {
+                        'id': notif.id,
+                        'title': notif.title,
+                        'message': notif.message,
+                        'type': notif.notification_type,
+                        'created_at': notif.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                    yield f"data: {json.dumps(data)}\n\n"
+            time.sleep(2)
+            
+    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
+

@@ -725,6 +725,7 @@
 <script>
 let map;
 let markers = [];
+let driverLayerGroup;
 
 document.addEventListener('DOMContentLoaded', function() {
     // View toggle functionality
@@ -801,8 +802,56 @@ function initializeMap() {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
+    driverLayerGroup = L.layerGroup().addTo(map);
+
     // Add markers for food listings
     addMarkersToMap();
+
+    // Fetch and display active volunteer coverage layers
+    fetchAndDrawDrivers();
+    setInterval(fetchAndDrawDrivers, 15000);
+}
+
+function fetchAndDrawDrivers() {
+    fetch('/receiver/live-drivers/')
+        .then(response => response.json())
+        .then(data => {
+            if (!driverLayerGroup) return;
+            driverLayerGroup.clearLayers();
+
+            if (data.drivers && data.drivers.length > 0) {
+                data.drivers.forEach(d => {
+                    const driverIcon = L.divIcon({
+                        className: 'custom-driver-icon',
+                        html: `<div style="background-color:#3b82f6; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2.5px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.3);"><i class="fas fa-truck-fast" style="font-size:11px;"></i></div>`,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16]
+                    });
+
+                    const marker = L.marker([d.latitude, d.longitude], { icon: driverIcon });
+                    marker.bindPopup(`
+                        <div style="font-family:'Inter',sans-serif; padding:2px;">
+                            <h6 style="margin:0 0 6px 0; color:#2563eb; font-weight:700;"><i class="fas fa-user-circle me-1"></i>${d.username} (Active Driver)</h6>
+                            <p style="margin:0 0 4px 0; font-size:0.75rem; color:#4b5563;"><strong>Vehicle:</strong> ${d.vehicle_model}</p>
+                            <p style="margin:0 0 6px 0; font-size:0.75rem; color:#4b5563;"><strong>Phone:</strong> ${d.phone || 'N/A'}</p>
+                            <span class="badge bg-primary text-white rounded-pill px-2 py-0.5" style="font-size:0.6rem; font-weight:bold;">Active Coverage Area</span>
+                        </div>
+                    `);
+                    driverLayerGroup.addLayer(marker);
+
+                    const coverageCircle = L.circle([d.latitude, d.longitude], {
+                        color: '#2563eb',
+                        fillColor: '#3b82f6',
+                        fillOpacity: 0.12,
+                        weight: 1.5,
+                        dashArray: '4, 4',
+                        radius: 4000 // 4 km coverage indicator
+                    });
+                    driverLayerGroup.addLayer(coverageCircle);
+                });
+            }
+        })
+        .catch(err => console.error('Error fetching live drivers:', err));
 }
 
 async function addMarkersToMap() {

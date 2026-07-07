@@ -414,23 +414,48 @@
                                 </div>
                             </div>
 
-                            <!-- Food Description Info -->
+                            <!-- Multiple Cargo Shipments List -->
                             <div class="card border-0 p-3 mb-3.5" style="background: rgba(248, 250, 252, 0.85); border-radius: 16px;">
-                                <span class="text-muted extra-small text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.05em;">Assigned Cargo Details</span>
-                                <div class="d-flex align-items-center justify-content-between mt-2">
-                                    <div class="d-flex align-items-center gap-2.5">
-                                        <div style="width:36px; height:36px; background-color: var(--brand-emerald-light); border-radius:10px; display:flex; align-items:center; justify-content:center; color: var(--brand-emerald-dark);">
-                                            <i class="fas fa-box-open" style="font-size:1.05rem;"></i>
+                                <span class="text-muted extra-small text-uppercase fw-bold d-block mb-2" style="font-size: 0.6rem; letter-spacing: 0.05em;">Assigned Cargo Shipments</span>
+                                <div class="active-deliveries-list" style="max-height: 250px; overflow-y: auto;">
+                                    {% for delivery in active_deliveries %}
+                                    <div class="delivery-item-row p-2.5 mb-2 border rounded-3 bg-white" style="border-color: var(--border-color) !important;">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div style="width:28px; height:28px; background-color: var(--brand-emerald-light); border-radius:6px; display:flex; align-items:center; justify-content:center; color: var(--brand-emerald-dark);">
+                                                    <i class="fas fa-box" style="font-size:0.8rem;"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0" style="font-size:0.8rem;">{{ delivery.food_listing.food_name }}</h6>
+                                                    <span class="text-muted d-block" style="font-size:0.65rem; line-height: 1.25;">Pickup: {{ delivery.food_listing.donor.username }} | Dropoff: {{ delivery.requester.username }}</span>
+                                                </div>
+                                            </div>
+                                            <span class="fw-bold text-emerald" style="font-size:0.85rem; font-family:'Outfit', sans-serif;">{{ delivery.food_listing.quantity }} kg</span>
                                         </div>
-                                        <div>
-                                            <h6 class="fw-extrabold text-dark mb-0" style="font-family:'Outfit', sans-serif; font-size:0.95rem;">{{ active_delivery.food_listing.food_name }}</h6>
-                                            <span class="badge bg-white text-muted border fw-bold mt-1" style="font-size:0.62rem; padding: 0.15rem 0.4rem;">{{ active_delivery.food_listing.food_type }}</span>
+                                        <div class="d-flex justify-content-between align-items-center mt-2.5 pt-2 border-top" style="border-color: #f1f5f9 !important;">
+                                            <span class="badge {% if delivery.delivery_status == 'accepted' %}bg-warning text-dark{% else %}bg-primary text-white{% endif %}" style="font-size:0.6rem; padding: 0.25rem 0.5rem; border-radius: 20px;">
+                                                {% if delivery.delivery_status == 'accepted' %}Heading to Pickup{% else %}In Transit{% endif %}
+                                            </span>
+                                            <form method="post" action="{% url 'driver:update_status' delivery.id %}" enctype="multipart/form-data" class="d-inline">
+                                                {% csrf_token %}
+                                                {% if delivery.delivery_status == 'accepted' %}
+                                                    <input type="hidden" name="status" value="picked_up">
+                                                    <button type="submit" class="btn btn-emerald btn-xs py-1 px-2.5 rounded-pill fw-bold text-white border-0" style="font-size:0.65rem; background: var(--brand-emerald-dark); cursor:pointer;">
+                                                        Confirm Pickup
+                                                    </button>
+                                                {% elif delivery.delivery_status == 'picked_up' %}
+                                                    <input type="hidden" name="status" value="delivered">
+                                                    <div class="d-flex align-items-center gap-1.5">
+                                                        <input type="file" name="delivery_photo" class="form-control form-control-sm" style="font-size:0.65rem; padding: 0.2rem 0.4rem; max-width: 130px; border-radius: 6px;" required accept="image/*">
+                                                        <button type="submit" class="btn btn-primary btn-xs py-1 px-2.5 rounded-pill fw-bold text-white border-0" style="font-size:0.65rem; background: #3b82f6; cursor:pointer;">
+                                                            Deliver
+                                                        </button>
+                                                    </div>
+                                                {% endif %}
+                                            </form>
                                         </div>
                                     </div>
-                                    <div class="text-end">
-                                        <span class="d-block fw-extrabold text-emerald" style="font-size:1.15rem; font-family:'Outfit', sans-serif; letter-spacing:-0.02em;">{{ active_delivery.food_listing.quantity }} kg</span>
-                                        <span class="text-muted extra-small" style="font-size:0.65rem;">rescue volume</span>
-                                    </div>
+                                    {% endfor %}
                                 </div>
                             </div>
 
@@ -439,25 +464,6 @@
                                 <button type="button" id="launchNavigator" class="btn w-100 py-2.5 fw-bold text-white border-0 transition-all shadow-sm" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); font-size:0.8rem; border-radius: 12px !important; letter-spacing: 0.01em; cursor:pointer;">
                                     <i class="fas fa-location-arrow me-1.5 animate-pulse"></i> Launch Live Fullscreen Navigator
                                 </button>
-
-                                <form method="post" action="{% url 'driver:update_status' active_delivery.id %}" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    {% if active_delivery.delivery_status == 'accepted' %}
-                                        <input type="hidden" name="status" value="picked_up">
-                                        <button type="submit" class="btn btn-emerald w-100 py-2.5 rounded-3 fw-bold text-white border-0 shadow-sm transition-all" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-size:0.8rem; border-radius:12px !important;">
-                                            <i class="fas fa-truck-pickup me-1.5"></i> Confirm Pickup Handover
-                                        </button>
-                                    {% elif active_delivery.delivery_status == 'picked_up' %}
-                                        <input type="hidden" name="status" value="delivered">
-                                        <div class="mb-3.5 card border-0 p-3" style="background: rgba(248, 250, 252, 0.6); border-radius: 12px;">
-                                            <label class="form-label text-muted extra-small fw-bold text-uppercase mb-2" style="font-size:0.62rem; letter-spacing:0.05em;">Upload Delivery Proof Photo</label>
-                                            <input type="file" name="delivery_photo" class="form-control rounded-3" style="font-size:0.75rem; background:#ffffff;" required accept="image/*">
-                                        </div>
-                                        <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold text-white border-0 shadow-sm transition-all" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); font-size:0.8rem; border-radius:12px !important;">
-                                            <i class="fas fa-circle-check me-1.5"></i> Complete Drop-off Handover
-                                        </button>
-                                    {% endif %}
-                                </form>
                             </div>
                         </div>
                     {% else %}
@@ -592,53 +598,123 @@
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let donorLat = 0;
-    let donorLng = 0;
-    let ngoLat = 0;
-    let ngoLng = 0;
+    const activeDeliveries = [
+        {% for d in active_deliveries %}
+        {
+            id: {{ d.id }},
+            food_name: "{{ d.food_listing.food_name|escapejs }}",
+            donor_name: "{{ d.food_listing.donor.username|escapejs }}",
+            ngo_name: "{{ d.requester.username|escapejs }}",
+            donor_lat: parseFloat("{{ d.food_listing.latitude|default:0 }}"),
+            donor_lng: parseFloat("{{ d.food_listing.longitude|default:0 }}"),
+            ngo_lat: parseFloat("{{ d.requester.profile.latitude|default:0 }}"),
+            ngo_lng: parseFloat("{{ d.requester.profile.longitude|default:0 }}"),
+            status: "{{ d.delivery_status }}"
+        },
+        {% endfor %}
+    ];
+
+    function getOptimizedRouteWaypoints(startLatLng) {
+        if (activeDeliveries.length === 0) return [];
+        
+        let pickups = [];
+        let dropoffs = [];
+
+        activeDeliveries.forEach(d => {
+            if (d.status === 'accepted') {
+                pickups.push({ lat: d.donor_lat, lng: d.donor_lng, label: `Pickup: ${d.donor_name} (${d.food_name})` });
+            }
+            dropoffs.push({ lat: d.ngo_lat, lng: d.ngo_lng, label: `NGO: ${d.ngo_name} (${d.food_name})` });
+        });
+
+        // Deep copy coordinate arrays so we can safely splice them
+        let pickupsCopy = pickups.map(p => ({ ...p }));
+        let dropoffsCopy = dropoffs.map(d => ({ ...d }));
+
+        let currentPos = startLatLng || L.latLng(activeDeliveries[0].donor_lat, activeDeliveries[0].donor_lng);
+        let ordered = [];
+
+        if (startLatLng) {
+            ordered.push(startLatLng);
+        }
+
+        // 1. Visit nearest pending pickups first
+        while (pickupsCopy.length > 0) {
+            let nearestIdx = 0;
+            let minDist = Infinity;
+            for (let i = 0; i < pickupsCopy.length; i++) {
+                let dist = currentPos.distanceTo(L.latLng(pickupsCopy[i].lat, pickupsCopy[i].lng));
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearestIdx = i;
+                }
+            }
+            let nextStop = pickupsCopy.splice(nearestIdx, 1)[0];
+            currentPos = L.latLng(nextStop.lat, nextStop.lng);
+            ordered.push(currentPos);
+        }
+
+        // 2. Visit nearest NGO drop-offs next
+        while (dropoffsCopy.length > 0) {
+            let nearestIdx = 0;
+            let minDist = Infinity;
+            for (let i = 0; i < dropoffsCopy.length; i++) {
+                let dist = currentPos.distanceTo(L.latLng(dropoffsCopy[i].lat, dropoffsCopy[i].lng));
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearestIdx = i;
+                }
+            }
+            let nextStop = dropoffsCopy.splice(nearestIdx, 1)[0];
+            currentPos = L.latLng(nextStop.lat, nextStop.lng);
+            ordered.push(currentPos);
+        }
+
+        return ordered;
+    }
 
     try {
-        donorLat = parseFloat("{{ active_delivery.food_listing.latitude|default:0 }}");
-        donorLng = parseFloat("{{ active_delivery.food_listing.longitude|default:0 }}");
-        ngoLat = parseFloat("{{ active_delivery.requester.profile.latitude|default:0 }}");
-        ngoLng = parseFloat("{{ active_delivery.requester.profile.longitude|default:0 }}");
-
-        if (donorLat && donorLng) {
-            const centerLat = ngoLat ? (donorLat + ngoLat) / 2 : donorLat;
-            const centerLng = ngoLng ? (donorLng + ngoLng) / 2 : donorLng;
+        if (activeDeliveries.length > 0) {
+            // Find map center by averaging coordinates
+            let sumLat = 0, sumLng = 0, count = 0;
+            activeDeliveries.forEach(d => {
+                sumLat += d.donor_lat + d.ngo_lat;
+                sumLng += d.donor_lng + d.ngo_lng;
+                count += 2;
+            });
+            const centerLat = sumLat / count;
+            const centerLng = sumLng / count;
             
-            const map = L.map('deliveryMap').setView([centerLat, centerLng], 13);
+            const map = L.map('deliveryMap').setView([centerLat, centerLng], 12);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(map);
 
-            if (ngoLat && ngoLng) {
-                // Initialize Leaflet Routing control with OpenStreetMap engine
+            const routeWaypoints = getOptimizedRouteWaypoints(null);
+
+            if (routeWaypoints.length > 0) {
                 L.Routing.control({
-                    waypoints: [
-                        L.latLng(donorLat, donorLng),
-                        L.latLng(ngoLat, ngoLng)
-                    ],
+                    waypoints: routeWaypoints,
                     routeWhileDragging: false,
-                    show: false, // Hides text panel on main worksheet map
+                    show: false,
                     addWaypoints: false,
                     draggableWaypoints: false,
                     lineOptions: {
                         styles: [{ color: '#10b981', opacity: 0.85, weight: 6 }]
                     },
                     createMarker: function(i, wp, nWps) {
-                        if (i === 0) {
-                            return L.marker(wp.latLng).bindPopup("<strong>Pickup Source</strong><br>{{ active_delivery.food_listing.donor.username }}");
-                        } else {
-                            return L.marker(wp.latLng).bindPopup("<strong>NGO Drop-off Point</strong><br>{{ active_delivery.requester.username }}");
-                        }
+                        let label = "Route Stop " + (i + 1);
+                        activeDeliveries.forEach(d => {
+                            if (Math.abs(d.donor_lat - wp.latLng.lat) < 0.0001 && Math.abs(d.donor_lng - wp.latLng.lng) < 0.0001) {
+                                label = `<strong>Pickup Source: ${d.donor_name}</strong><br>${d.food_name}`;
+                            } else if (Math.abs(d.ngo_lat - wp.latLng.lat) < 0.0001 && Math.abs(d.ngo_lng - wp.latLng.lng) < 0.0001) {
+                                label = `<strong>NGO Drop-off Point: ${d.ngo_name}</strong><br>${d.food_name}`;
+                            }
+                        });
+                        return L.marker(wp.latLng).bindPopup(label);
                     }
                 }).addTo(map);
-            } else {
-                L.marker([donorLat, donorLng]).addTo(map)
-                    .bindPopup("<strong>Pickup Source</strong><br>{{ active_delivery.food_listing.donor.username }}")
-                    .openPopup();
             }
         }
     } catch (e) {
@@ -658,6 +734,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let routingControl = null;
     let userMarker = null;
     let lastPosition = null;
+    let lastSyncTime = 0;
 
     if (launchBtn) {
         launchBtn.addEventListener('click', function() {
@@ -745,15 +822,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeNavigator() {
         if (navMap) return;
 
-        // Initialize full map center on donor pickup
-        navMap = L.map('navigatorMap', { zoomControl: false }).setView([donorLat, donorLng], 14);
+        let initLat = activeDeliveries.length > 0 ? activeDeliveries[0].donor_lat : 0;
+        let initLng = activeDeliveries.length > 0 ? activeDeliveries[0].donor_lng : 0;
+
+        navMap = L.map('navigatorMap', { zoomControl: false }).setView([initLat, initLng], 14);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap'
         }).addTo(navMap);
 
         navMap.invalidateSize();
-        fallbackRouting(); // Initial overview route connection (static representation)
+        fallbackRouting();
     }
 
     function startLiveTracking() {
@@ -767,6 +846,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     lastPosition = { lat: lat, lng: lng };
+
+                    // Throttled sync coordinates to server (max once every 15s)
+                    const nowSync = Date.now();
+                    if (nowSync - lastSyncTime > 15000) {
+                        lastSyncTime = nowSync;
+                        fetch('/driver/update-location/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ latitude: lat, longitude: lng })
+                        })
+                        .catch(err => console.error('Failed to sync live coordinates:', err));
+                    }
                     
                     navStatus.innerHTML = `<span class="text-success fw-bold"><i class="fas fa-circle-check me-1"></i> Live GPS Guidance Active</span>`;
                     
@@ -790,16 +881,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     // Recalculate shortest route from current user position
-                    const waypoints = [];
-                    waypoints.push(L.latLng(lat, lng));
-
-                    {% if active_delivery.delivery_status == 'accepted' %}
-                        waypoints.push(L.latLng(donorLat, donorLng));
-                    {% endif %}
-                    
-                    if (ngoLat && ngoLng) {
-                        waypoints.push(L.latLng(ngoLat, ngoLng));
-                    }
+                    const waypoints = getOptimizedRouteWaypoints(L.latLng(lat, lng));
 
                     // Re-route routing machine with live coordinates (hide instruction panels)
                     if (routingControl) {
@@ -808,7 +890,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         routingControl = L.Routing.control({
                             waypoints: waypoints,
                             routeWhileDragging: false,
-                            show: false, // Hides text panel on fullscreen navigator map
+                            show: false,
                             addWaypoints: false,
                             draggableWaypoints: false,
                             lineOptions: {
@@ -817,16 +899,20 @@ document.addEventListener('DOMContentLoaded', function() {
                             createMarker: function(i, wp, nWps) {
                                 if (i === 0) {
                                     return L.marker(wp.latLng, {icon: userMarker.options.icon}).bindPopup("<strong>You</strong>");
-                                } else if (i === 1 && nWps === 3) {
-                                    return L.marker(wp.latLng).bindPopup("<strong>Pickup: {{ active_delivery.food_listing.donor.username }}</strong>");
-                                } else {
-                                    return L.marker(wp.latLng).bindPopup("<strong>NGO: {{ active_delivery.requester.username }}</strong>");
                                 }
+                                let label = "Stop " + i;
+                                activeDeliveries.forEach(d => {
+                                    if (Math.abs(d.donor_lat - wp.latLng.lat) < 0.0001 && Math.abs(d.donor_lng - wp.latLng.lng) < 0.0001) {
+                                        label = `<strong>Pickup Source: ${d.donor_name}</strong><br>${d.food_name}`;
+                                    } else if (Math.abs(d.ngo_lat - wp.latLng.lat) < 0.0001 && Math.abs(d.ngo_lng - wp.latLng.lng) < 0.0001) {
+                                        label = `<strong>NGO Drop-off Point: ${d.ngo_name}</strong><br>${d.food_name}`;
+                                    }
+                                });
+                                return L.marker(wp.latLng).bindPopup(label);
                             }
                         }).addTo(navMap);
                     }
 
-                    // recet zoom close on driver position
                     navMap.setView([lat, lng], 17);
                 },
                 function(error) {
@@ -867,10 +953,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function fallbackRouting() {
-        const waypoints = [L.latLng(donorLat, donorLng)];
-        if (ngoLat && ngoLng) {
-            waypoints.push(L.latLng(ngoLat, ngoLng));
-        }
+        const waypoints = getOptimizedRouteWaypoints(null);
 
         if (routingControl) {
             routingControl.setWaypoints(waypoints);
@@ -878,25 +961,44 @@ document.addEventListener('DOMContentLoaded', function() {
             routingControl = L.Routing.control({
                 waypoints: waypoints,
                 routeWhileDragging: false,
-                show: false, // Hides text panel on fullscreen navigator map
+                show: false,
                 addWaypoints: false,
                 draggableWaypoints: false,
                 lineOptions: {
                     styles: [{ color: '#10b981', opacity: 0.85, weight: 6 }]
                 },
                 createMarker: function(i, wp, nWps) {
-                    if (i === 0) {
-                        return L.marker(wp.latLng).bindPopup("<strong>Pickup Source</strong>");
-                    } else {
-                        return L.marker(wp.latLng).bindPopup("<strong>NGO Drop-off Point</strong>");
-                    }
+                    let label = "Route Stop " + (i + 1);
+                    activeDeliveries.forEach(d => {
+                        if (Math.abs(d.donor_lat - wp.latLng.lat) < 0.0001 && Math.abs(d.donor_lng - wp.latLng.lng) < 0.0001) {
+                            label = `<strong>Pickup Source: ${d.donor_name}</strong><br>${d.food_name}`;
+                        } else if (Math.abs(d.ngo_lat - wp.latLng.lat) < 0.0001 && Math.abs(d.ngo_lng - wp.latLng.lng) < 0.0001) {
+                            label = `<strong>NGO Drop-off Point: ${d.ngo_name}</strong><br>${d.food_name}`;
+                        }
+                    });
+                    return L.marker(wp.latLng).bindPopup(label);
                 }
             }).addTo(navMap);
         }
         
-        // fit view bounds
         const bounds = L.latLngBounds(waypoints);
         navMap.fitBounds(bounds, { padding: [50, 50] });
+    }
+
+    // Initial check-in driver coordinates on page load
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            fetch('/driver/update-location/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ latitude: lat, longitude: lng })
+            })
+            .then(res => res.json())
+            .then(data => console.log("Initial driver check-in synchronized:", data))
+            .catch(err => console.error("Initial check-in failed:", err));
+        });
     }
 });
 </script>
@@ -940,7 +1042,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- Info Block -->
         <div class="mb-3">
             <span class="text-muted extra-small text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.05em;">Active Transit Route</span>
-            <h6 class="fw-bold text-dark mt-0.5 mb-1 text-truncate" style="font-size:0.82rem;">{{ active_delivery.food_listing.food_name }}</h6>
+            <h6 class="fw-bold text-dark mt-0.5 mb-1 text-truncate" style="font-size:0.82rem;">{{ active_delivery.food_listing.food_name }} {% if active_deliveries.count > 1 %}(+{{ active_deliveries.count|add:"-1" }} more){% endif %}</h6>
             <div id="navStatus" class="text-muted extra-small" style="font-size:0.7rem;">
                 <i class="fas fa-circle text-secondary me-1" style="font-size:0.5rem;"></i> Navigator Idle. Ready to guide.
             </div>

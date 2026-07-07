@@ -11,6 +11,7 @@ urlpatterns = [
     path('analytics/', views.donor_analytics, name='donor_analytics'),
     path('directory/', views.ngo_directory, name='ngo_directory'),
     path('csr-impact/', views.csr_impact, name='csr_impact'),
+    path('csr-impact/certificate/', views.generate_csr_certificate, name='generate_csr_certificate'),
     path('driver-directory/', views.driver_directory, name='driver_directory'),
     path('allocate-food/', views.allocate_food, name='allocate_food'),
     path('broadcast-alert/', views.broadcast_alert, name='broadcast_alert'),

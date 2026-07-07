@@ -11,4 +11,6 @@ urlpatterns = [
     path('messages/<int:message_id>/edit/', views.edit_message, name='edit_message'),
     path('<int:user_id>/read-status/', views.check_read_status, name='check_read_status'),
     path('send-location/', views.send_location_message, name='send_location'),
+    path('<int:user_id>/stream/', views.chat_stream, name='chat_stream'),
+    path('notifications/stream/', views.notification_stream, name='notification_stream'),
 ]
