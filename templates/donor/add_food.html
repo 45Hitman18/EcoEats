@@ -525,32 +525,32 @@
                         </div>
 
                         <div class="row g-4">
-                            <!-- AI Shelf-Life Predictor Inputs -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Food Category (for AI Prediction)</label>
-                                <select id="ml-category" class="form-select-custom">
-                                    <option value="veg" selected>Vegetarian (Generic)</option>
-                                    <option value="non-veg">Non-Vegetarian (Generic)</option>
-                                    <option value="bakery">Bakery / Bread</option>
-                                    <option value="cooked">Cooked Meals / Soups</option>
-                                    <option value="dairy">Dairy Products / Milk</option>
-                                </select>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Packaging Type</label>
-                                <select id="ml-packaging" class="form-select-custom">
-                                    <option value="boxed" selected>Boxed / Tray</option>
-                                    <option value="airtight">Airtight Container</option>
-                                    <option value="open">Open Container</option>
-                                    <option value="refrigerated">Refrigerated Storage</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Ambient Temp (°C)</label>
-                                <input type="number" id="ml-temperature" class="form-control" value="25" min="0" max="50">
-                            </div>
+                             <!-- AI Shelf-Life Predictor Inputs -->
+                             <div class="col-md-6">
+                                 <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Food Category (for AI Prediction)</label>
+                                 <select id="ml-category" name="ml_category" class="form-select-custom">
+                                     <option value="veg" selected>Vegetarian (Generic)</option>
+                                     <option value="non-veg">Non-Vegetarian (Generic)</option>
+                                     <option value="bakery">Bakery / Bread</option>
+                                     <option value="cooked">Cooked Meals / Soups</option>
+                                     <option value="dairy">Dairy Products / Milk</option>
+                                 </select>
+                             </div>
+                             
+                             <div class="col-md-6">
+                                 <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Packaging Type</label>
+                                 <select id="ml-packaging" name="packaging_type" class="form-select-custom">
+                                     <option value="boxed" selected>Boxed / Tray</option>
+                                     <option value="airtight">Airtight Container</option>
+                                     <option value="open">Open Container</option>
+                                     <option value="refrigerated">Refrigerated Storage</option>
+                                 </select>
+                             </div>
+ 
+                             <div class="col-md-6">
+                                 <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Ambient Temp (°C)</label>
+                                 <input type="number" id="ml-temperature" name="ambient_temperature" class="form-control" value="25" min="0" max="50">
+                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.03em;">Time Prepared</label>

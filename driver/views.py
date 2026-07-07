@@ -135,6 +135,8 @@ def update_status(request, request_id):
 
     if new_status == 'picked_up' and food_request.delivery_status == 'accepted':
         food_request.delivery_status = 'picked_up'
+        from django.utils import timezone
+        food_request.transit_start_time = timezone.now()
         food_request.save()
         
         # Notify receiver
@@ -152,6 +154,8 @@ def update_status(request, request_id):
         
         food_request.delivery_status = 'delivered'
         food_request.status = 'completed'
+        from django.utils import timezone
+        food_request.transit_end_time = timezone.now()
         food_request.save()
 
         # Update associated listing status to donated

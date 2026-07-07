@@ -199,6 +199,7 @@
                             <th>Dietary Type</th>
                             <th>Quantity</th>
                             <th>Current Status</th>
+                            <th>AI Quality Score</th>
                             <th>Expiry Window</th>
                             <th class="text-end">Primary Location</th>
                         </tr>
@@ -237,6 +238,11 @@
                                     {% elif listing.status == 'donated' %}status-distributed
                                     {% else %}status-inactive{% endif %}">
                                     {{ listing.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge" style="background-color: var(--brand-emerald-light); color: var(--brand-emerald-dark); font-weight: 800; font-size: 0.72rem; border: 1px solid rgba(16, 185, 129, 0.25); padding: 0.35rem 0.65rem;">
+                                    <i class="fas fa-shield-heart me-1"></i> {{ listing.quality_score }} / 100
                                 </span>
                             </td>
                             <td>

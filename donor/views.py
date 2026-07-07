@@ -76,6 +76,11 @@ def add_food(request):
             food_listing = form.save(commit=False)
             food_listing.donor = request.user
 
+            # Save AI quality features from submitted form
+            food_listing.ambient_temperature = float(request.POST.get('ambient_temperature', 25.0))
+            food_listing.packaging_type = request.POST.get('packaging_type', 'boxed')
+            food_listing.ml_category = request.POST.get('ml_category', 'veg')
+
             # Handle location fields from JavaScript
             latitude = request.POST.get('latitude')
             longitude = request.POST.get('longitude')

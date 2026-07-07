@@ -428,6 +428,7 @@
                                                 <div>
                                                     <h6 class="fw-bold text-dark mb-0" style="font-size:0.8rem;">{{ delivery.food_listing.food_name }}</h6>
                                                     <span class="text-muted d-block" style="font-size:0.65rem; line-height: 1.25;">Pickup: {{ delivery.food_listing.donor.username }} | Dropoff: {{ delivery.requester.username }}</span>
+                                                    <span class="text-emerald d-block fw-bold" style="font-size:0.65rem; color: var(--brand-emerald-dark) !important;"><i class="fas fa-shield-heart"></i> AI Quality Score: {{ delivery.food_listing.quality_score }}/100</span>
                                                 </div>
                                             </div>
                                             <span class="fw-bold text-emerald" style="font-size:0.85rem; font-family:'Outfit', sans-serif;">{{ delivery.food_listing.quantity }} kg</span>
@@ -518,7 +519,7 @@
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
                                             <h6 class="fw-extrabold text-dark mb-0" style="font-family:'Outfit', sans-serif; font-size:0.92rem;">{{ job.food_listing.food_name }}</h6>
-                                            <span class="badge bg-emerald-light text-emerald-dark extra-small border rounded-pill mt-1.5" style="font-size:0.62rem; padding: 0.2rem 0.6rem; border-color: rgba(16, 185, 129, 0.2) !important;">{{ job.food_listing.quantity }} kg • {{ job.food_listing.food_type }}</span>
+                                            <span class="badge bg-emerald-light text-emerald-dark extra-small border rounded-pill mt-1.5" style="font-size:0.62rem; padding: 0.2rem 0.6rem; border-color: rgba(16, 185, 129, 0.2) !important;">{{ job.food_listing.quantity }} kg • {{ job.food_listing.food_type }} • AI Quality: {{ job.food_listing.quality_score }}/100</span>
                                         </div>
                                         <span class="badge bg-light text-muted border rounded-pill fw-bold" style="font-size:0.62rem; padding: 0.25rem 0.6rem;">Awaiting Driver</span>
                                     </div>

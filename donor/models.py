@@ -28,9 +28,91 @@ class FoodListing(models.Model):
     is_deleted = models.BooleanField(default=False)  # Soft delete field
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    ambient_temperature = models.FloatField(default=25.0)
+    packaging_type = models.CharField(max_length=20, default='boxed')
+    ml_category = models.CharField(max_length=20, default='veg')
 
     def __str__(self):
         return f'{self.food_name} by {self.donor.username}'
+
+    def calculate_quality_score(self):
+        """Calculates an AI-based food quality score between 0 and 100."""
+        score = 65.0
+        
+        # Packaging
+        pack_scores = {
+            'refrigerated': 20.0,
+            'airtight': 15.0,
+            'boxed': 10.0,
+            'open': 0.0
+        }
+        score += pack_scores.get(self.packaging_type, 10.0)
+        
+        # Category base
+        cat_scores = {
+            'bakery': 15.0,
+            'veg': 10.0,
+            'cooked': 5.0,
+            'dairy': 5.0,
+            'non-veg': 0.0
+        }
+        score += cat_scores.get(self.ml_category, 10.0)
+        
+        # Temperature Penalty
+        temp_penalty = max(0.0, (self.ambient_temperature - 20.0) * 1.5)
+        score -= temp_penalty
+        
+        # Time since prep and predicted shelf-life decay
+        from django.utils import timezone
+        now = timezone.now()
+        hours_since_prep = max(0.0, (now - self.prepared_time).total_seconds() / 3600.0)
+        
+        # Query loaded Random Forest model dynamically
+        from donor.apps import DonorConfig
+        model = DonorConfig.model
+        feature_columns = DonorConfig.feature_columns
+        
+        predicted_shelf_life = 24.0  # default baseline
+        if model and feature_columns:
+            try:
+                input_dict = {col: 0.0 for col in feature_columns}
+                input_dict['prep_age_hours'] = hours_since_prep
+                input_dict['temperature'] = self.ambient_temperature
+                
+                cat_col = f"category_{self.ml_category}"
+                if cat_col in input_dict:
+                    input_dict[cat_col] = 1.0
+                    
+                pack_col = f"packaging_{self.packaging_type}"
+                if pack_col in input_dict:
+                    input_dict[pack_col] = 1.0
+                    
+                input_vector = [input_dict[col] for col in feature_columns]
+                predicted_shelf_life = float(model.predict([input_vector])[0])
+            except Exception:
+                pass
+                
+        total_span = max(1.0, hours_since_prep + predicted_shelf_life)
+        remaining_ratio = max(0.0, 1.0 - (hours_since_prep / total_span))
+        
+        # Delivery duration penalty
+        active_request = self.requests.filter(status='completed').first() or self.requests.filter(delivery_status='picked_up').first()
+        delivery_duration_hours = 0.0
+        if active_request:
+            if active_request.transit_start_time:
+                end_time = active_request.transit_end_time or now
+                delivery_duration_hours = max(0.0, (end_time - active_request.transit_start_time).total_seconds() / 3600.0)
+                
+        score -= (delivery_duration_hours * 5.0)
+        
+        # Freshness multiplier
+        score = score * remaining_ratio
+        
+        return int(max(0, min(100, score)))
+
+    @property
+    def quality_score(self):
+        return self.calculate_quality_score()
 
     @property
     def is_expired(self):
@@ -78,6 +160,8 @@ class FoodRequest(models.Model):
         default='none'
     )
     delivery_photo = models.ImageField(upload_to='delivery_proofs/', null=True, blank=True)
+    transit_start_time = models.DateTimeField(null=True, blank=True)
+    transit_end_time = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f'Request for {self.food_listing.food_name} by {self.requester.username}'
