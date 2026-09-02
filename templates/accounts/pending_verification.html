@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verification Pending | EcoEats{% endblock %}
+
+{% block content %}
+<style>
+    .pending-section {
+        background-color: #f8fafc;
+        min-height: calc(100vh - var(--nav-height) - 1px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1rem;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    .pending-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+        max-width: 600px;
+        width: 100%;
+        padding: 2.5rem;
+        text-align: center;
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .pulse-warning-icon {
+        width: 80px;
+        height: 80px;
+        background-color: #fffbeb;
+        color: #d97706;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.2);
+        animation: warning-pulse 2s infinite;
+    }
+
+    .profile-summary {
+        background-color: #f1f5f9;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin: 2rem 0;
+        text-align: left;
+    }
+
+    .profile-summary-title {
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--slate-500);
+        margin-bottom: 0.75rem;
+        border-bottom: 1px solid #cbd5e1;
+        padding-bottom: 0.5rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        font-size: 0.88rem;
+    }
+
+    .summary-label {
+        font-weight: 600;
+        color: var(--slate-500);
+    }
+
+    .summary-val {
+        font-weight: 700;
+        color: var(--slate-900);
+    }
+
+    @keyframes warning-pulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.4);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 12px rgba(217, 119, 6, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="pending-section">
+    <div class="pending-card">
+        <div class="pulse-warning-icon">
+            <i class="fa-solid fa-user-shield"></i>
+        </div>
+        
+        <h3 class="fw-extrabold text-dark mb-2" style="font-family: 'Outfit', sans-serif;">Account Verification Pending</h3>
+        <p class="text-muted mb-0 small">Thank you for registering with EcoEats! Our security team manually reviews every organization's details and volunteer driver credentials to ensure community safety.</p>
+
+        <div class="profile-summary">
+            <div class="profile-summary-title">Profile Details Pending Review</div>
+            
+            <div class="summary-row">
+                <span class="summary-label">Username:</span>
+                <span class="summary-val">{{ user.username }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Role:</span>
+                <span class="summary-val">{{ profile.get_role_display }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Phone Contact:</span>
+                <span class="summary-val">{{ profile.phone|default:"Not Provided" }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Base Location:</span>
+                <span class="summary-val text-truncate" style="max-width: 250px;">{{ profile.location|default:"Not Provided" }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">License/Paperwork:</span>
+                <span class="summary-val">
+                    {% if profile.license_document %}
+                        <span class="text-success"><i class="fa-solid fa-file-pdf me-1"></i> Uploaded</span>
+                    {% else %}
+                        <span class="text-danger"><i class="fa-solid fa-circle-exclamation me-1"></i> Missing</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="{% url 'accounts:edit_profile' %}" class="btn btn-brand" style="background-color: var(--brand-emerald-dark); border-radius: 0.75rem; color: white; text-decoration: none;">
+                <i class="fa-solid fa-user-pen me-2"></i> Update Info / Reupload
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="btn btn-outline-secondary px-4 py-2.5 fw-bold" style="border-radius: 0.75rem; text-decoration: none;">
+                <i class="fa-solid fa-sign-out-alt me-2"></i> Log Out
+            </a>
+        </div>
+        
+        <p class="text-muted mt-4 extra-small mb-0">Need urgent approval? Reach out to support at <a href="mailto:support@ecoeats.com" class="text-emerald text-decoration-none fw-bold">support@ecoeats.com</a>.</p>
+    </div>
+</div>
+{% endblock %}

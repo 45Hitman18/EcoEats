@@ -12,4 +12,5 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('edit_profile/', views.edit_profile_view, name='edit_profile'),
     path('create-profile/', views.create_profile_view, name='create_profile'),
+    path('pending-verification/', views.pending_verification_view, name='pending_verification'),
 ]

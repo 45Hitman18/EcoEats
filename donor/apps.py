@@ -21,8 +21,8 @@ class DonorConfig(AppConfig):
                     payload = joblib.load(model_path)
                     DonorConfig.model = payload.get('model')
                     DonorConfig.feature_columns = payload.get('feature_columns')
-                    print("✅ ML Food Shelf-Life model loaded successfully on startup!")
+                    print("[OK] ML Food Shelf-Life model loaded successfully on startup!")
                 except Exception as e:
-                    print(f"❌ Failed to load ML Food Shelf-Life model: {str(e)}")
+                    print(f"[ERROR] Failed to load ML Food Shelf-Life model: {str(e)}")
             else:
-                print("⚠️ ML Food Shelf-Life model binary not found. Please run train_model.py first.")
+                print("[WARNING] ML Food Shelf-Life model binary not found. Please run train_model.py first.")

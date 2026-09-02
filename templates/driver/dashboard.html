@@ -790,7 +790,8 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch('/chat/send-location/', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
                 },
                 body: JSON.stringify({
                     donor_id: "{{ active_delivery.food_listing.donor.id }}",
@@ -854,7 +855,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         lastSyncTime = nowSync;
                         fetch('/driver/update-location/', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
                             body: JSON.stringify({ latitude: lat, longitude: lng })
                         })
                         .catch(err => console.error('Failed to sync live coordinates:', err));
@@ -993,7 +997,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const lng = position.coords.longitude;
             fetch('/driver/update-location/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
                 body: JSON.stringify({ latitude: lat, longitude: lng })
             })
             .then(res => res.json())

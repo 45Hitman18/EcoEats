@@ -182,9 +182,6 @@ def edit_message(request, message_id):
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
 @login_required
 def send_location_message(request):
     if request.method == 'POST':

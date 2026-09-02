@@ -17,12 +17,37 @@ class VerificationMiddleware(MiddlewareMixin):
     def process_view(self, request, view_func, view_args, view_kwargs):
         if request.user.is_authenticated:
             try:
-                if not request.user.profile.is_verified:
-                    messages.error(request, 'Your account has been blocked. Please contact support.')
-                    logout(request)
-                    return redirect(reverse('accounts:login'))
-            except:
-                messages.error(request, 'Your account has been blocked. Please contact support.')
-                logout(request)
-                return redirect(reverse('accounts:login'))
+                profile = request.user.profile
+                # Admin and superusers bypass verification check
+                if profile.role == 'admin' or request.user.is_superuser:
+                    return None
+                
+                if not profile.is_verified:
+                    # Allow access to pending verification, logout, profile view, and static/media files
+                    allowed_url_names = [
+                        'accounts:pending_verification', 
+                        'accounts:logout', 
+                        'accounts:profile', 
+                        'accounts:edit_profile'
+                    ]
+                    
+                    try:
+                        current_url_name = f"{request.resolver_match.namespace}:{request.resolver_match.url_name}" if request.resolver_match.namespace else request.resolver_match.url_name
+                    except Exception:
+                        current_url_name = None
+                        
+                    if current_url_name in allowed_url_names or request.path.startswith('/static/') or request.path.startswith('/media/'):
+                        return None
+                        
+                    return redirect(reverse('accounts:pending_verification'))
+            except Exception:
+                try:
+                    current_url_name = f"{request.resolver_match.namespace}:{request.resolver_match.url_name}" if request.resolver_match.namespace else request.resolver_match.url_name
+                except Exception:
+                    current_url_name = None
+                    
+                if current_url_name in ['accounts:create_profile', 'accounts:logout']:
+                    return None
+                return redirect(reverse('accounts:create_profile'))
         return None
+

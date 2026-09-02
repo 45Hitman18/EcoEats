@@ -62,7 +62,7 @@ def register_view(request):
         form = CustomUserCreationForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             # Log registration activity
             ActivityLog.objects.create(
                 user=user,
@@ -83,13 +83,6 @@ def login_view(request):
         if form.is_valid():
             user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password'])
             if user is not None:
-                try:
-                    if not user.profile.is_verified:
-                        messages.error(request, 'Your account has been blocked. Please contact support.')
-                        return render(request, 'accounts/login.html', {'form': form})
-                except Profile.DoesNotExist:
-                    messages.error(request, 'Your account has been blocked. Please contact support.')
-                    return render(request, 'accounts/login.html', {'form': form})
                 login(request, user)
                 # Log login activity
                 ActivityLog.objects.create(
@@ -178,8 +171,18 @@ def create_profile_view(request):
         if phone and role and location:
             Profile.objects.create(user=request.user, phone=phone, role=role, location=location)
             messages.success(request, 'Profile created successfully!')
-            return redirect('dashboard')
+            return redirect('accounts:dashboard')
         else:
             messages.error(request, 'All fields are required.')
 
     return render(request, 'accounts/create_profile.html')
+
+@login_required
+def pending_verification_view(request):
+    try:
+        profile = request.user.profile
+        if profile.is_verified:
+            return redirect('accounts:dashboard')
+    except Profile.DoesNotExist:
+        return redirect('accounts:create_profile')
+    return render(request, 'accounts/pending_verification.html', {'profile': profile})

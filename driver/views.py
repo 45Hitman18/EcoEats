@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
@@ -244,9 +245,6 @@ def decline_direct_request(request, request_id):
     return redirect('driver:dashboard')
 
 
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
 @login_required
 def update_location(request):
     if request.user.profile.role != 'driver':
